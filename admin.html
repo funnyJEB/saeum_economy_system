@@ -494,17 +494,35 @@
             });
         }
 
+        // 3. 주식 시세 업데이트 (트랜잭션 오류 완벽 해결 버전)
         window.updateStock = async function() {
             const sId = document.getElementById('targetStock').value;
             const np = parseInt(document.getElementById('newPrice').value);
-            if(!sId || isNaN(np)) return alert('입력 확인');
+            
+            if(!sId || isNaN(np)) return alert('변경할 종목과 새로운 시세를 정확히 입력해주세요.');
+            
             try {
-                await runTransaction(db, async (t) => {
-                    t.update(doc(db, "stocks", sId), { 현재가: np });
-                    t.set(doc(collection(db, `stocks/${sId}/price_history`)), { date: new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.',''), price: np, timestamp: serverTimestamp() });
+                // 트랜잭션 오류를 방지하는 안전한 순차적 업데이트 방식
+                const stockRef = doc(db, "stocks", sId);
+                
+                // 1. 종목의 '현재가' 업데이트
+                await updateDoc(stockRef, { 현재가: np });
+                
+                // 2. 학생들 차트용 'price_history' 하위 컬렉션에 날짜와 가격 누적 기록
+                await addDoc(collection(db, "stocks", sId, "price_history"), { 
+                    date: new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.',''), 
+                    price: np, 
+                    timestamp: serverTimestamp() 
                 });
-                alert('시세 반영 완료'); document.getElementById('newPrice').value=''; loadStocks();
-            } catch(e) { console.error(e); }
+                
+                alert(`✅ [${sId}] 종목의 시세가 ${np.toLocaleString()}P로 확정 및 기록되었습니다.`);
+                document.getElementById('newPrice').value = ''; 
+                loadStocks(); // 표 새로고침
+                
+            } catch(e) { 
+                console.error("주식 시세 업데이트 에러:", e); 
+                alert('❌ 시세 업데이트 중 오류가 발생했습니다.\n에러 내용: ' + e.message); 
+            }
         };
 
         window.syncRanking = async function() {
