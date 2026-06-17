@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학급 경제 시스템 - 관리자 대시보드</title>
+    <style>
+        /* 기본 톤앤매너 */
+        :root {
+            --bg-dark: #121826; --sidebar-bg: #1e293b; --card-bg: #1f2937;
+            --text-main: #f3f4f6; --text-muted: #9ca3af;
+            --accent: #3b82f6; --accent-hover: #2563eb;
+            --danger: #ef4444; --success: #10b981; --warning: #f59e0b;
+            --border: #374151;
+        }
+
+        body, html {
+            margin: 0; padding: 0; font-family: 'Pretendard', sans-serif;
+            background-color: var(--bg-dark); color: var(--text-main); height: 100vh; overflow: hidden;
+        }
+
+        /* 로그인 오버레이 */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-dark); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
+        }
+        .login-box {
+            background-color: var(--card-bg); padding: 40px; border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); text-align: center; border: 1px solid var(--border); width: 80%; max-width: 320px;
+        }
+        .login-box input {
+            padding: 12px; margin: 20px 0; width: 100%; border-radius: 6px; border: 1px solid var(--border);
+            background-color: #111827; color: white; box-sizing: border-box; text-align: center;
+        }
+        .btn {
+            background-color: var(--accent); color: white; border: none; padding: 12px 20px;
+            border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; box-sizing: border-box; transition: 0.2s;
+        }
+        .btn:hover { background-color: var(--accent-hover); }
+        .btn-outline { background-color: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background-color: #374151; }
+
+        /* 대시보드 레이아웃 */
+        #dashboard { display: none; height: 100%; flex-direction: row; }
+        #dashboard.active { display: flex; }
+        .sidebar {
+            width: 260px; background-color: var(--sidebar-bg); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; flex-shrink: 0;
+        }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
+        .sidebar-header h2 { margin: 0 0 10px 0; font-size: 20px; }
+        .nav-menu { flex: 1; overflow-y: auto; padding: 10px 0; }
+        .nav-item {
+            padding: 15px 20px; cursor: pointer; color: var(--text-muted); font-weight: 500; transition: 0.2s;
+        }
+        .nav-item:hover, .nav-item.active { background-color: var(--card-bg); color: var(--accent); border-left: 4px solid var(--accent); }
+        .main-content { flex: 1; padding: 20px 30px; overflow-y: auto; }
+        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+
+        h3 { border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-top: 0; margin-bottom: 20px; }
+        .table-wrapper { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; background-color: var(--card-bg); }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+        th { background-color: #374151; color: #d1d5db; white-space: nowrap; }
+        tr:hover { background-color: #2d3748; }
+
+        /* 입력 폼 및 그리드 컨트롤 개편 */
+        .control-panel {
+            background-color: var(--card-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border);
+            display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+        
+        /* 세금 설정 패널 전용 독립 컨테이너 설계 */
+        .tax-panel {
+            background-color: var(--card-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border);
+            margin-bottom: 20px; box-sizing: border-box; display: block; width: 100%;
+        }
+        .tax-grid {
+            width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px; box-sizing: border-box;
+        }
+        .input-group { display: flex; flex-direction: column; gap: 6px; box-sizing: border-box; }
+        
+        /* Grid 내부 구조용 가변 크기 확보 */
+        .control-panel .input-group { flex: 1; min-width: 150px; } 
+        
+        .input-group label { font-size: 13px; color: var(--text-muted); font-weight: bold; }
+        .input-group input, .input-group select {
+            padding: 10px; border-radius: 6px; border: 1px solid var(--border); background-color: #111827; color: white; width: 100%; box-sizing: border-box;
+        }
+
+        /* 랭킹 바 */
+        .ratio-bar { width: 100%; height: 12px; background: #374151; border-radius: 6px; display: flex; overflow: hidden; margin-bottom: 4px; }
+        .ratio-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
+
+        /* 모바일 최적화 및 삐짐방지 완벽 보완 */
+        @media (max-width: 768px) {
+            #dashboard { flex-direction: column; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+            .nav-menu { display: flex; overflow-x: auto; white-space: nowrap; padding: 0; }
+            .nav-item { border-left: none; border-bottom: 3px solid transparent; padding: 12px 15px; }
+            .nav-item.active { border-left: none; border-bottom: 3px solid var(--accent); }
+            
+            .control-panel { flex-direction: column; align-items: stretch; }
+            .control-panel .input-group { width: 100%; }
+            
+            .tax-grid { 
+                grid-template-columns: repeat(2, 1fr) !important; 
+                width: 100% !important; 
+                box-sizing: border-box !important;
+            }
+            .btn { width: 100% !important; }
+        }
+
+        /* 인쇄 전용 CSS 환경 설정 */
+        @media print {
+            body, html { background: white !important; color: black !important; height: auto !important; overflow: visible !important; }
+            #dashboard, #loginOverlay { display: none !important; }
+            #printSection { display: block !important; position: absolute; top: 0; left: 0; width: 100%; color: black; }
+            table { background: white !important; color: black !important; border: 1px solid #000 !important; width: 100% !important; }
+            th { background-color: #f3f4f6 !important; color: #000 !important; border: 1px solid #000 !important; padding: 8px !important; }
+            td { border-bottom: 1px solid #000 !important; border-right: 1px solid #e5e7eb !important; color: #000 !important; padding: 8px !important; }
+        }
+
+        #printSection { display: none; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="loginOverlay">
+        <div class="login-box">
+            <h2>🔒 Admin Console</h2>
+            <input type="password" id="adminPwd" placeholder="관리자 비밀번호" onkeypress="if(event.key === 'Enter') checkLogin()">
+            <button class="btn" onclick="checkLogin()">인증 및 접속</button>
+        </div>
+    </div>
+
+    <div id="dashboard">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>📊 학급 경제 제어</h2>
+                <span id="dbText" style="font-size:13px; color:var(--text-muted);">🟡 DB 연결 대기 중...</span>
+            </div>
+            <div class="nav-menu">
+                <div class="nav-item active" onclick="switchTab('students')">🧑‍🎓 학생 & 자산 제어</div>
+                <div class="nav-item" onclick="switchTab('salary')">💰 세금 & 급여 일괄지급</div>
+                <div class="nav-item" onclick="switchTab('stocks')">📈 주식 시세 조정</div>
+                <div class="nav-item" onclick="switchTab('ranking')">🏆 랭킹 & 포트폴리오</div>
+                <div class="nav-item" onclick="switchTab('logs')">📋 거래 로그 감사</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            
+            <!-- 1. 학생 제어 탭 -->
+            <div id="tab-students" class="tab-content active">
+                <h3>🧑‍🎓 개별 학생 제어 (포인트 & 신용등급)</h3>
+                <div class="control-panel">
+                    <div class="input-group">
+                        <label>대상 학생</label>
+                        <select id="targetStudent"><option value="">로딩 중...</option></select>
+                    </div>
+                    <div class="input-group">
+                        <label>포인트 증감 (+지급 / -차감)</label>
+                        <input type="number" id="pointInput" placeholder="예: 500">
+                    </div>
+                    <div class="input-group">
+                        <label>신용등급 (직접 변경시)</label>
+                        <input type="number" id="creditInput" placeholder="예: 500">
+                    </div>
+                    <div class="input-group" style="flex: 2;">
+                        <label>변경 사유 (로그 기록용 필수)</label>
+                        <input type="text" id="reasonInput" placeholder="예: 상점 부여, 등급 강등">
+                    </div>
+                    <button class="btn" style="width: auto; height: 40px;" onclick="updateStudentData()">실행</button>
+                </div>
+                
+                <div style="text-align: right;">
+                    <button class="btn btn-outline" style="width: auto;" onclick="loadAllStudentsTable()">전체 학생 목록 불러오기 (데이터 소모)</button>
+                </div>
+                <div class="table-wrapper" id="studentTableWrapper" style="display: none;">
+                    <table>
+                        <thead><tr><th>학번/이름</th><th>직업</th><th>현금</th><th>신용등급</th><th>성과급카운트</th></tr></thead>
+                        <tbody id="studentTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2. 세금 및 일괄 급여 탭 -->
+            <div id="tab-salary" class="tab-content">
+                <h3>💰 세금 설정 및 일괄 월급 지급</h3>
+                
+                <div class="tax-panel" style="background-color: #1e293b;">
+                    <div class="tax-grid">
+                        <div class="input-group"><label>전기/수도세 (일괄)</label><input type="number" id="setUtility"></div>
+                        <div class="input-group"><label>앞자리 부동산세</label><input type="number" id="setFront"></div>
+                        <div class="input-group"><label>중간자리 부동산세</label><input type="number" id="setMiddle"></div>
+                        <div class="input-group"><label>뒷자리 부동산세</label><input type="number" id="setBack"></div>
+                    </div>
+                    <div style="text-align: right;">
+                        <button class="btn" style="width: auto; background-color: var(--success);" onclick="saveTaxSettings()">세금 기준 저장</button>
+                    </div>
+                </div>
+
+                <div class="tax-panel">
+                    <h4 style="margin-top: 0;">💵 [정산 공식] 기본급 - 건보료(15%) - 자리세 - 전기/수도세 + (성과급 카운트×1P)</h4>
+                    <p style="font-size: 13px; color: var(--warning);">* 주의: 실행 시 전원의 급여가 지급되며, 성과급 카운트는 0으로 초기화됩니다.</p>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <button class="btn" style="background-color: #8b5cf6; padding: 15px; font-size: 16px; flex: 1;" onclick="executeBatchSalary()">🚀 반 전체 월급 일괄 정산 및 지급 실행</button>
+                        <button class="btn btn-outline" style="padding: 15px; font-size: 16px; flex: 1; border-color: var(--warning); color: var(--warning);" onclick="generatePayrollReport()">🖨️ 교실 게시용 월급 명세서 인쇄물 출력</button>
+                    </div>
+                </div>
+
+                <h4 style="margin-top: 30px;">📋 최근 지급 내역서 미리보기</h4>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <!-- 표 헤더 명칭 '전기/수도세'로 변경 완료 -->
+                            <tr><th>학번/이름</th><th>직업</th><th>기본급</th><th>건보료</th><th>자리세</th><th>전기/수도세</th><th>성과급</th><th>실지급액</th></tr>
+                        </thead>
+                        <tbody id="payrollReportBody">
+                            <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">[인쇄물 출력] 버튼을 누르면 정산 내역 명세표가 이곳에 생성됩니다.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. 주식 컨트롤 탭 -->
+            <div id="tab-stocks" class="tab-content">
+                <h3>📈 실시간 주식 시세 컨트롤</h3>
+                <div class="control-panel">
+                    <div class="input-group"><label>종목</label><select id="targetStock"></select></div>
+                    <div class="input-group"><label>새로운 현재가</label><input type="number" id="newPrice"></div>
+                    <button class="btn" style="width: auto; background-color: var(--danger);" onclick="updateStock()">시세 확정 (히스토리 기록)</button>
+                </div>
+                <div class="table-wrapper">
+                    <table><thead><tr><th>종목명</th><th>현재가</th><th>현재고</th></tr></thead><tbody id="stockTableBody"></tbody></table>
+                </div>
+            </div>
+
+            <!-- 4. 랭킹 탭 -->
+            <div id="tab-ranking" class="tab-content">
+                <h3>🏆 랭킹 스냅샷 동기화</h3>
+                <button class="btn" style="background-color: #8b5cf6; margin-bottom: 20px;" onclick="syncRanking()">🚀 전체 자산 재계산 및 TOP 5 갱신</button>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>순위</th><th>이름</th><th>총 자산</th><th style="min-width: 250px;">자산 구성 (현금/주식/적금)</th></tr></thead>
+                        <tbody id="rankingBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 5. 로그 탭 -->
+            <div id="tab-logs" class="tab-content">
+                <h3>📋 경제 활동 로그 감사</h3>
+                <button class="btn btn-outline" style="width: auto; margin-bottom: 15px;" onclick="loadLogs()">🔄 최신 로그 불러오기</button>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>일시</th><th>ID</th><th>유형</th><th>항목</th><th>변동액</th><th>내용</th></tr></thead>
+                        <tbody id="logTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 인쇄용 백업 섹션 -->
+    <div id="printSection">
+        <h1 style="text-align: center; margin-bottom: 5px;">2026 새움 학급경제활동 월급 명세서</h1>
+        <p id="printDate" style="text-align: right; font-size: 12px; margin-bottom: 20px;">출력일시: </p>
+        <table>
+            <thead>
+                <tr>
+                    <!-- 표 헤더 명칭 '전기/수도세'로 변경 완료 -->
+                    <th>학번/이름</th><th>직업명</th><th>기본급</th><th>건강보험(15%)</th><th>부동산세</th><th>전기/수도세</th><th>성과급</th><th>실지급액</th>
+                </tr>
+            </thead>
+            <tbody id="printTableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- 스크립트 엔진 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, getDoc, doc, updateDoc, addDoc, setDoc, query, orderBy, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDl8SYdtPzaw_fwtbK_o24JZ1bIb8JnbA8",
+            authDomain: "saeumeconomysystem2026.firebaseapp.com",
+            projectId: "saeumeconomysystem2026",
+            storageBucket: "saeumeconomysystem2026.firebasestorage.app",
+            messagingSenderId: "475976322417",
+            appId: "1:475976322417:web:4f0e5131c178c3428e3ad0"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const ADMIN_PW = "12346789"; 
+
+        window.checkLogin = async function() {
+            if(document.getElementById('adminPwd').value === ADMIN_PW) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('dashboard').classList.add('active');
+                initAdmin();
+            } else alert("비밀번호 불일치");
+        };
+
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content, .nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            if(tabId === 'stocks') loadStocks();
+            if(tabId === 'salary') loadTaxSettings();
+            if(tabId === 'ranking') loadCurrentRanking();
+        };
+
+        async function initAdmin() {
+            try {
+                document.getElementById('dbText').innerText = '🟢 DB 정상 연동 완료';
+                document.getElementById('dbText').style.color = 'var(--success)';
+                const snap = await getDocs(collection(db, "students"));
+                const select = document.getElementById('targetStudent');
+                select.innerHTML = '<option value="">-- 학생 선택 --</option>';
+                snap.forEach(docSnap => {
+                    select.innerHTML += `<option value="${docSnap.id}">${docSnap.id} ${docSnap.data().이름}</option>`;
+                });
+            } catch (e) { document.getElementById('dbText').innerText = '🔴 DB 에러'; }
+        }
+
+        window.updateStudentData = async function() {
+            const id = document.getElementById('targetStudent').value;
+            const pVal = document.getElementById('pointInput').value;
+            const cVal = document.getElementById('creditInput').value;
+            const reason = document.getElementById('reasonInput').value;
+
+            if(!id || (!pVal && !cVal) || !reason) return alert('학생 지정, 수치변화값, 사유를 입력하세요.');
+
+            try {
+                const ref = doc(db, "students", id);
+                const snap = await getDoc(ref);
+                let dataToUpdate = {};
+                let logStr = "";
+
+                if(pVal) {
+                    const amt = parseInt(pVal);
+                    dataToUpdate.포인트 = (snap.data().포인트 || 0) + amt;
+                    logStr += `포인트 ${amt>0?'+':''}${amt}P `;
+                    await addDoc(collection(db, "logs"), { ID: id, 항목: "교사직권조정", 유형: "포인트", 변동금액: amt, 내용: reason, 일시: serverTimestamp() });
+                }
+                if(cVal) {
+                    dataToUpdate.신용등급 = parseInt(cVal);
+                    logStr += `신용등급 ${cVal}로 변경 `;
+                    await addDoc(collection(db, "logs"), { ID: id, 항목: "교사직권조정", 유형: "신용등급", 변동금액: 0, 내용: `[${cVal}등급] ${reason}`, 일시: serverTimestamp() });
+                }
+
+                await updateDoc(ref, dataToUpdate);
+                alert(`${id} 학생 제어 완료:\n${logStr}`);
+                document.getElementById('pointInput').value = ''; document.getElementById('creditInput').value = ''; document.getElementById('reasonInput').value = '';
+                document.getElementById('studentTableWrapper').style.display = 'none';
+            } catch(e) { console.error(e); alert('오류 발생'); }
+        };
+
+        window.loadAllStudentsTable = async function() {
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = '<tr><td colspan="5">로딩 중...</td></tr>';
+            document.getElementById('studentTableWrapper').style.display = 'block';
+            
+            const snap = await getDocs(collection(db, "students"));
+            tbody.innerHTML = '';
+            snap.forEach(dSnap => {
+                const d = dSnap.data();
+                tbody.innerHTML += `<tr><td><strong>${dSnap.id}</strong> ${d.이름}</td><td>${d.직업명 || '-'}</td><td style="color:var(--accent); font-weight:bold;">${(d.포인트||0).toLocaleString()}P</td><td>${d.신용등급 || '-'}</td><td style="color:var(--warning);">${d.성과급카운트 || 0} 건</td></tr>`;
+            });
+        };
+
+        async function loadTaxSettings() {
+            const snap = await getDoc(doc(db, "system", "settings"));
+            if(snap.exists()) {
+                const d = snap.data();
+                document.getElementById('setUtility').value = d.공과금 || 0;
+                document.getElementById('setFront').value = d.부동산세_앞 || 0;
+                document.getElementById('setMiddle').value = d.부동산세_중간 || 0;
+                document.getElementById('setBack').value = d.부동산세_뒤 || 0;
+            }
+        }
+
+        window.saveTaxSettings = async function() {
+            await setDoc(doc(db, "system", "settings"), {
+                공과금: parseInt(document.getElementById('setUtility').value||0),
+                부동산세_앞: parseInt(document.getElementById('setFront').value||0),
+                부동산세_중간: parseInt(document.getElementById('setMiddle').value||0),
+                부동산세_뒤: parseInt(document.getElementById('setBack').value||0)
+            }, { merge: true });
+            alert('세금 설정이 DB에 성공적으로 저장되었습니다.');
+        };
+
+        window.executeBatchSalary = async function() {
+            if(!confirm("전체 학생의 월급을 일괄 지급하시겠습니까?")) return;
+            try {
+                const setSnap = await getDoc(doc(db, "system", "settings"));
+                const settings = setSnap.exists() ? setSnap.data() : {};
+                
+                const jobSnap = await getDocs(collection(db, "jobs"));
+                let jobSalaries = {};
+                jobSnap.forEach(d => jobSalaries[d.id] = d.data().기본급 || 0);
+
+                const stuSnap = await getDocs(collection(db, "students"));
+                let promises = []; let count = 0;
+
+                stuSnap.forEach(docSnap => {
+                    const st = docSnap.data();
+                    const sid = docSnap.id;
+                    const base = jobSalaries[st.직업명] || 0;
+                    if(base === 0) return;
+
+                    const health = Math.floor(base * 0.15);
+                    const util = settings.공과금 || 0;
+                    let seatTax = 0;
+                    if(st.자리위치 === 'front') seatTax = settings.부동산세_앞 || 0;
+                    if(st.자리위치 === 'middle') seatTax = settings.부동산세_중간 || 0;
+                    if(st.자리위치 === 'back') seatTax = settings.부동산세_뒤 || 0;
+
+                    let perf = st.성과급카운트 || 0; if(perf > 30) perf = 30;
+                    const finalPay = base - health - seatTax - util + perf;
+                    
+                    promises.push(updateDoc(doc(db, "students", sid), { 포인트: (st.포인트 || 0) + finalPay, 성과급카운트: 0 }));
+                    // 로그 기록 명칭도 '전기/수도세'로 직관화
+                    promises.push(addDoc(collection(db, "logs"), { ID: sid, 항목: "일괄월급", 유형: "포인트", 변동금액: finalPay, 내용: `기본:${base} | 건보:-${health} | 자릿세:-${seatTax} | 전기/수도세:-${util} | 성과:+${perf}`, 일시: serverTimestamp() }));
+                    count++;
+                });
+                await Promise.all(promises);
+                alert(`총 ${count}명의 월급 정산이 완료되었습니다.`);
+            } catch(e) { console.error(e); alert("오류 발생"); }
+        };
+
+        window.generatePayrollReport = async function() {
+            try {
+                const setSnap = await getDoc(doc(db, "system", "settings"));
+                const settings = setSnap.exists() ? setSnap.data() : {};
+                const jobSnap = await getDocs(collection(db, "jobs"));
+                let jobSalaries = {}; jobSnap.forEach(d => jobSalaries[d.id] = d.data().기본급 || 0);
+
+                const stuSnap = await getDocs(collection(db, "students"));
+                const reportBody = document.getElementById('payrollReportBody');
+                const printBody = document.getElementById('printTableBody');
+                
+                reportBody.innerHTML = ''; printBody.innerHTML = '';
+
+                stuSnap.forEach(docSnap => {
+                    const st = docSnap.data();
+                    const base = jobSalaries[st.직업명] || 0;
+                    if(base === 0) return;
+
+                    const health = Math.floor(base * 0.15);
+                    const util = settings.공과금 || 0;
+                    let seatTax = 0;
+                    if(st.자리위치 === 'front') seatTax = settings.부동산세_앞 || 0;
+                    if(st.자리위치 === 'middle') seatTax = settings.부동산세_중간 || 0;
+                    if(st.자리위치 === 'back') seatTax = settings.부동산세_뒤 || 0;
+
+                    let perf = st.성과급카운트 || 0; if(perf > 30) perf = 30;
+                    const finalPay = base - health - seatTax - util + perf;
+
+                    const rowHTML = `
+                        <tr>
+                            <td><strong>${docSnap.id}</strong> ${st.이름}</td><td>${st.직업명}</td><td>${base.toLocaleString()}P</td>
+                            <td style="color:var(--danger); text-decoration:none;">-${health.toLocaleString()}P</td>
+                            <td style="color:var(--danger); text-decoration:none;">-${seatTax.toLocaleString()}P</td>
+                            <td style="color:var(--danger); text-decoration:none;">-${util.toLocaleString()}P</td>
+                            <td style="color:var(--success);">+${perf.toLocaleString()}P</td>
+                            <td style="font-weight:bold; color:var(--warning);">${finalPay.toLocaleString()}P</td>
+                        </tr>`;
+                    reportBody.innerHTML += rowHTML; printBody.innerHTML += rowHTML;
+                });
+
+                document.getElementById('printDate').innerText = `출력일시: ${new Date().toLocaleString('ko-KR')}`;
+                setTimeout(() => { window.print(); }, 500);
+            } catch(e) { alert('명세서 로드 실패'); }
+        };
+
+        async function loadStocks() {
+            const snap = await getDocs(collection(db, "stocks"));
+            const tbody = document.getElementById('stockTableBody');
+            const select = document.getElementById('targetStock');
+            tbody.innerHTML = ''; select.innerHTML = '';
+            snap.forEach(dSnap => {
+                const d = dSnap.data();
+                select.innerHTML += `<option value="${dSnap.id}">${dSnap.id}</option>`;
+                tbody.innerHTML += `<tr><td><strong>${dSnap.id}</strong></td><td style="color:var(--danger);">${(d.현재가||0).toLocaleString()}P</td><td>${d.현재고||0}주</td></tr>`;
+            });
+        }
+
+        window.updateStock = async function() {
+            const sId = document.getElementById('targetStock').value;
+            const np = parseInt(document.getElementById('newPrice').value);
+            if(!sId || isNaN(np)) return alert('입력 확인');
+            try {
+                await runTransaction(db, async (t) => {
+                    t.update(doc(db, "stocks", sId), { 현재가: np });
+                    t.set(doc(collection(db, `stocks/${sId}/price_history`)), { date: new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.',''), price: np, timestamp: serverTimestamp() });
+                });
+                alert('시세 반영 완료'); document.getElementById('newPrice').value=''; loadStocks();
+            } catch(e) { console.error(e); }
+        };
+
+        window.syncRanking = async function() {
+            try {
+                const sSnap = await getDocs(collection(db, "stocks"));
+                let pMap = {}; sSnap.forEach(d => pMap[d.id] = d.data().현재가||0);
+
+                const stuSnap = await getDocs(collection(db, "students"));
+                let arr = [];
+                stuSnap.forEach(dSnap => {
+                    const d = dSnap.data(); let stV = 0;
+                    // 주식 자산 계산
+                    if(d.보유주식) Object.entries(d.보유주식).forEach(([k,v]) => stV += v * (pMap[k]||0));
+                    
+                    // ⚠️ 수정된 핵심 로직: 적금 자산 정밀 합산 (가입된 모든 적금의 (유형 * 현재회차) 합계 연산)
+                    let pt = d.포인트||0, sv = 0;
+                    if(d.적금 && typeof d.적금 === 'object') {
+                        Object.values(d.적금).forEach(svInfo => {
+                            sv += (Number(svInfo.유형 || 0) * Number(svInfo.현재회차 || 0));
+                        });
+                    }
+
+                    let tot = pt + stV + sv;
+                    arr.push({ id:dSnap.id, name:d.이름, total:tot, pRatio: tot>0?Math.round((pt/tot)*100):0, sRatio: tot>0?Math.round((stV/tot)*100):0, svRatio: tot>0?Math.round((sv/tot)*100):0 });
+                });
+                arr.sort((a,b)=>b.total-a.total); const top5 = arr.slice(0,5);
+                await setDoc(doc(db, "system", "ranking"), { top5_list: top5 }, { merge: true });
+                alert('랭킹 갱신 완료'); renderRank(top5);
+            } catch(e) { console.error(e); }
+        };
+
+        async function loadCurrentRanking() {
+            const snap = await getDoc(doc(db, "system", "ranking"));
+            if(snap.exists() && snap.data().top5_list) renderRank(snap.data().top5_list);
+        }
+
+        function renderRank(top5) {
+            const tb = document.getElementById('rankingBody'); tb.innerHTML = '';
+            top5.forEach((st, i) => {
+                tb.innerHTML += `<tr><td><strong>${i+1}위</strong></td><td>${st.id} ${st.name}</td><td style="color:var(--warning); font-weight:bold;">${st.total.toLocaleString()} P</td><td><div class="ratio-bar"><div style="width:${st.pRatio}%;background:var(--accent);"></div><div style="width:${st.sRatio}%;background:var(--danger);"></div><div style="width:${st.svRatio}%;background:var(--success);"></div></div><div class="ratio-labels"><span>현 ${st.pRatio}%</span><span>주 ${st.sRatio}%</span><span>적 ${st.svRatio}%</span></div></td></tr>`;
+            });
+        }
+
+        window.loadLogs = async function() {
+            try {
+                const snap = await getDocs(collection(db, "logs"));
+                let logs = [];
+                snap.forEach(dSnap => {
+                    const d = dSnap.data(); let tVal = 0, dtStr = "시간 미상";
+                    if(d.일시) {
+                        if(typeof d.일시 === 'string') {
+                            dtStr = d.일시;
+                            try {
+                                const isPM = dtStr.includes('오후'); const n = dtStr.match(/\d+/g);
+                                if(n && n.length >= 5) {
+                                    let h = parseInt(n[3]); if(isPM && h!==12) h+=12; if(!isPM && h===12) h=0;
+                                    tVal = new Date(n[0], n[1]-1, n[2], h, n[4], n[5]||0).getTime();
+                                }
+                            } catch(e){}
+                        } else if(typeof d.일시.toDate === 'function') {
+                            const dateObj = d.일시.toDate(); tVal = dateObj.getTime();
+                            dtStr = `${dateObj.getFullYear()}.${dateObj.getMonth()+1}.${dateObj.getDate()} ${String(dateObj.getHours()).padStart(2,'0')}:${String(dateObj.getMinutes()).padStart(2,'0')}`;
+                        }
+                    }
+                    logs.push({ ...d, tVal, dtStr });
+                });
+                logs.sort((a,b) => b.tVal - a.tVal);
+                
+                const tb = document.getElementById('logTableBody'); tb.innerHTML = '';
+                logs.forEach(d => {
+                    const clr = d.변동금액 > 0 ? 'var(--success)' : (d.변동금액 < 0 ? 'var(--danger)' : 'white');
+                    tb.innerHTML += `<tr><td style="color:var(--text-muted);font-size:13px;">${d.dtStr}</td><td><strong>${d.ID||'-'}</strong></td><td>${d.유형||'-'}</td><td>${d.항목||'-'}</td><td style="color:${clr};font-weight:bold;">${d.변동금액>0?'+':''}${(d.변동금액||0).toLocaleString()}</td><td style="font-size:13px;">${d.내용||'-'}</td></tr>`;
+                });
+            } catch(e) { alert('로그 로딩 에러'); }
+        };
+    </script>
+</body>
+</html>

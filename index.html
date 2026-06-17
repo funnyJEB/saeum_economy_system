@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>새움 경제시스템 대시보드</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="./css/main.css">
+</head>
+<body>
+
+<div id="login-section">
+    <div class="card login-card">
+        <div>
+            <div class="login-title">🏫 새움 경제시스템 <a href="./admin.html" style="font-size: 18px; color: var(--text-sub); font-weight: 700; text-decoration: none; cursor: default;">(S.E.S.)</a></div>
+            <div class="login-subtitle">🎉 환영합니다! 로그인을 진행해주세요. 🚀</div>
+        </div>
+        <div class="input-group">
+            <label for="inputId">ID</label>
+            <input type="text" id="inputId" placeholder="5자리 학번을 입력하세요." autocomplete="off">
+        </div>
+        <div class="input-group">
+            <label for="inputPw">비밀번호</label>
+            <input type="password" id="inputPw" placeholder="비밀번호를 입력하세요.">
+        </div>
+        <button class="btn-login" onclick="executeLogin()">로그인</button>
+    </div>
+</div>
+
+<div id="dashboard">
+    <section class="card profile-card">
+        <div class="avatar-zone">
+            <span>아바타<br>영역</span>
+        </div>
+        <div class="info-zone">
+            <div class="user-meta">
+                <div class="name-wrapper">
+                    <span id="userName" class="user-name">불러오는 중</span>
+                    <span class="text-nim">님</span>
+                    <button class="btn-settings" onclick="openModal('profile')" aria-label="프로필 설정">⚙️</button>
+                </div>
+                <div class="job-row">
+                    <span>💼 <span id="userJob">-</span></span>
+                    <button id="btn-work-start" class="btn-work-start" style="display: none;">업무 개시</button>
+                </div>
+            </div>
+            <div class="data-frame">
+                <span class="data-label">포인트</span>
+                <span class="data-value point"><span id="userBalance">0</span> P</span>
+            </div>
+            <div class="data-frame">
+                <span class="data-label">신용 등급</span>
+                <span class="data-value credit"><span id="userCredit">0</span> 등급</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="card extra-info-card">
+        <div style="display: flex; gap: 12px; align-items: stretch;">
+            <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+                <div class="info-section-title">📈 주식현황</div>
+                <div class="info-sub-frame" style="flex: 1;">
+                    <div class="list-container-scroll" id="stockListContainer"></div>
+                </div>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; min-width: 0;">
+                <div class="info-section-title">🏦 적금현황</div>
+                <div class="info-sub-frame" style="flex: 1;">
+                    <div class="list-container-scroll" id="savingListContainer"></div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div class="info-section-title">📊 자산 분석</div>
+            <div class="info-sub-frame">
+                <div style="display:flex; justify-content:space-between; font-size:15px; font-weight:800; color:var(--text-main);">
+                    <span id="asset-total-text">총 자산: 0 P</span>
+                </div>
+                <div class="asset-analysis-bar">
+                    <div class="bar-pt" id="bar-pt"></div>
+                    <div class="bar-sv" id="bar-sv"></div>
+                    <div class="bar-st" id="bar-st"></div>
+                </div>
+                <div class="asset-legend">
+                    <span id="legend-pt">🔵 포인트 (0%)</span>
+                    <span id="legend-sv">🟢 적금 (0%)</span>
+                    <span id="legend-st">🟠 주식 (0%)</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="quick-grid">
+        <button class="btn-menu" onclick="openModal('mall')"><span class="btn-icon">🛍️</span><span>새움mall</span></button>
+        <button class="btn-menu" onclick="openModal('auction')"><span class="btn-icon">⚖️</span><span>경매장</span></button>
+        <button class="btn-menu" onclick="openModal('stockInfo')"><span class="btn-icon">📈</span><span>주식가격</span></button>
+        <button class="btn-menu" onclick="openModal('top5')"><span class="btn-icon">🏆</span><span>자산가 TOP5</span></button>
+        <button class="btn-menu full-width" onclick="openModal('history')"><span class="btn-icon">📜</span><span>최근 거래내역 조회</span></button>
+    </section>
+</div>
+
+<div id="mart-section" class="job-section">
+    <div class="job-header">
+        <button class="btn-back" onclick="closeJobSection('mart-section')">⬅</button>
+        <div class="job-title">🛒 스마트 무인 POS</div>
+    </div>
+    <div class="card" style="display:flex; flex-direction:column; gap:16px;">
+        <div class="input-group mart-input">
+            <label>고객 선택</label>
+            <select id="martCustomerSelect" class="customer-select"><option value="">고객을 선택하세요</option></select>
+        </div>
+        <div style="display:flex; flex-direction:row; gap:10px;">
+            <div class="input-group mart-input" style="flex:2; min-width: 0;">
+                <label>상품 선택</label>
+                <select id="martItemSelect" onchange="calculateMartTotal()"><option value="">상품을 선택하세요</option></select>
+            </div>
+            <div class="input-group mart-input" style="flex:1; min-width: 0;">
+                <label>수량</label>
+                <input type="number" id="martQty" value="1" min="1" oninput="calculateMartTotal()">
+            </div>
+        </div>
+        <div style="background-color: var(--mart-light); border: 2px solid var(--mart-primary); border-radius: 16px; padding: 20px; text-align: center; margin-top: 8px;">
+            <div style="color: var(--mart-primary); font-weight:700; margin-bottom: 4px; font-size: 15px;">총 결제 금액</div>
+            <div id="martTotalPrice" style="font-size: 38px; font-weight: 800; color: var(--mart-primary);">0 P</div>
+        </div>
+        <button class="btn-mart-submit" onclick="executeMartPayment()">결제 승인하기</button>
+    </div>
+    <div class="card">
+        <div style="font-weight: 800; font-size: 16px; margin-bottom: 12px; display: flex; justify-content: space-between;">
+            <span>📦 실시간 마트 재고 현황</span>
+            <span style="font-size:12px; color:var(--text-sub); cursor:pointer;" onclick="loadMartData()">↻ 새로고침</span>
+        </div>
+        <table class="inventory-table">
+            <thead><tr><th>물품명</th><th>단가</th><th>현재 재고</th></tr></thead>
+            <tbody id="martInventoryTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<div id="bank-section" class="job-section">
+    <div class="job-header">
+        <button class="btn-back" onclick="closeJobSection('bank-section')">⬅</button>
+        <div class="job-title">🏦 스마트 은행 시스템</div>
+    </div>
+    <div class="card" style="display:flex; flex-direction:column; gap:16px;">
+        <div class="input-group bank-input">
+            <label>고객 선택</label>
+            <select id="bankCustomerSelect" class="customer-select" onchange="onBankCustomerSelect()"><option value="">고객을 선택하세요</option></select>
+        </div>
+    </div>
+    <div class="card" id="bankNewSavingDiv" style="display:none; flex-direction:column; gap:14px; background:var(--bank-light);">
+        <div style="font-weight:800; color:var(--bank-primary);">✨ 신규 적금 가입</div>
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1; min-width:0;">
+                <select id="newSavingType" class="input-group bank-input" style="width:100%; padding:14px; border-radius:10px; border:none; appearance:none; background:#FFFFFF;">
+                    <option value="50">50P 상품</option><option value="100">100P 상품</option>
+                </select>
+            </div>
+            <div style="flex:1; min-width:0;">
+                <select id="newSavingTarget" class="input-group bank-input" style="width:100%; padding:14px; border-radius:10px; border:none; appearance:none; background:#FFFFFF;">
+                    <option value="4">목표 4주(회)</option><option value="8">목표 8주(회)</option><option value="12">목표 12주(회)</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn-bank-action" onclick="executeBankCreate()">적금 개시 및 1회차 납입</button>
+    </div>
+    <div class="card" id="bankSavingsListCard" style="display:none; flex-direction:column; gap:12px;">
+        <div style="font-weight:800; color:var(--text-main);">고객 가입 적금 목록</div>
+        <div id="bankSavingsListContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+</div>
+
+<div id="stock-section" class="job-section">
+    <div class="job-header">
+        <button class="btn-back" onclick="closeJobSection('stock-section')">⬅</button>
+        <div class="job-title">📈 스마트 주식 거래소</div>
+    </div>
+    <div class="card" style="display:flex; flex-direction:column; gap:16px;">
+        <div class="input-group stock-input">
+            <label>고객 선택 (보유잔액 및 등급 수수료 확인)</label>
+            <select id="stockCustomerSelect" class="customer-select" onchange="onStockCustomerSelect()"><option value="">고객을 선택하세요</option></select>
+        </div>
+        <div style="background:var(--stock-light); border-radius:12px; padding:12px; text-align:center;">
+            <div style="font-size:13px; color:var(--stock-primary); margin-bottom:4px; font-weight:700;">적용 수수료율 / 잔액</div>
+            <div id="stockBalanceDisplay" style="font-size:15px; font-weight:800; color:var(--text-main);">고객을 먼저 선택하세요.</div>
+        </div>
+    </div>
+    <div class="card" id="ownedStocksCard" style="display:none; flex-direction:column; gap:12px;">
+        <div style="font-weight:800; color:var(--primary); font-size:18px;">📉 보유 주식</div>
+        <div id="ownedStocksContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+    <div class="card" id="buyStocksCard" style="display:none; flex-direction:column; gap:16px;">
+        <div style="font-weight:800; color:#F04452; font-size:18px;">🛒 주식 매수</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <div style="flex: 2; min-width: 0;">
+                <select id="stockItemSelect" class="input-group stock-input" onchange="onStockItemSelectChanged()" style="width: 100%; padding:14px; border:1px solid var(--sub-frame-border); border-radius:10px; appearance:none; background-color: #F9FAFB; font-size: 18px; font-weight: 700; color: var(--text-main);">
+                    <option value="">종목 선택</option>
+                </select>
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <input type="number" id="stockBuyQty" value="1" min="1" style="width: 100%; padding:14px; border:1px solid var(--sub-frame-border); border-radius:10px; text-align:center; background-color: #F9FAFB; outline: none; font-size: 18px; font-weight: 700; color: var(--text-main);">
+            </div>
+            <div style="flex: 1; min-width: 0;">
+                <button class="btn-stock-action" style="width: 100%; padding:14px 0; background:#F04452; text-align: center;" onclick="executeStockBuy()">매수</button>
+            </div>
+        </div>
+        <div id="stockBuyInfoDisplay" style="display: flex; justify-content: space-between; padding: 4px 4px 0; font-size: 16px; font-weight: 700; color: var(--text-sub);">
+            <span>현재가: <b id="stockBuyCurrentPrice" style="color:var(--stock-primary); font-weight: 800;">0 P</b></span>
+            <span>잔여주식수: <b id="stockBuyRemaining" style="color:var(--stock-primary); font-weight: 800;">0 주</b></span>
+        </div>
+        <div style="height: 120px; background: var(--sub-frame-bg); border-radius: 12px; border: 1px dashed #A7F3D0; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--stock-primary);">
+            <div style="font-size:24px; margin-bottom:4px;">📉📈</div>
+            <div style="font-size:13px; font-weight:600;">실시간 변동 그래프</div>
+            <div style="font-size:11px; opacity:0.7;">(시스템 데이터 연동 시 표시)</div>
+        </div>
+    </div>
+</div>
+
+<div id="modalOverlay" class="modal-overlay" onclick="closeModal()">
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div id="modalTitle" class="modal-title"></div>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div id="modalBody" class="modal-body"></div>
+    </div>
+</div>
+
+<div id="pwChangeModal" class="modal-overlay center-overlay" onclick="closePwChangeModal()">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">비밀번호 변경</div>
+            <button class="modal-close" onclick="closePwChangeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="input-group" style="margin-bottom: 16px;"><label>현재 비밀번호</label><input type="password" id="currentPwInput" placeholder="현재 비밀번호"></div>
+            <div class="input-group" style="margin-bottom: 16px;"><label>새 비밀번호</label><input type="password" id="newPwInput" placeholder="새로운 비밀번호"></div>
+            <div class="input-group" style="margin-bottom: 28px;"><label>새 비밀번호 확인</label><input type="password" id="confirmPwInput" placeholder="새로운 비밀번호 재입력"></div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-cancel" onclick="closePwChangeModal()">취소</button>
+                <button class="btn-login" onclick="executePwChange()" style="flex: 1; margin-top: 0;">변경하기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="systemAlertModal" class="modal-overlay center-overlay" onclick="closeSystemAlert()">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+        <div class="modal-body" style="text-align: center; padding: 10px 10px 0;">
+            <div id="systemAlertIcon" style="font-size: 40px; margin-bottom: 12px;">✅</div>
+            <div id="systemAlertText" style="font-size: 16px; font-weight: 700; color: var(--text-main); line-height: 1.5; margin-bottom: 24px; white-space: pre-wrap;">알림 내용</div>
+            <button class="btn-login" onclick="closeSystemAlert()" style="width: 100%; margin-top: 0;">확인</button>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="./js/firebase-config.js"></script>
+<script type="module" src="./js/utils.js"></script>
+<script type="module" src="./js/auth.js"></script>
+<script type="module" src="./js/dashboard.js"></script>
+<script type="module" src="./js/job-mart.js"></script>
+<script type="module" src="./js/job-bank.js"></script>
+<script type="module" src="./js/job-stock.js"></script>
+
+</body>
+</html>
