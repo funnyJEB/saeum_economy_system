@@ -136,6 +136,7 @@
                 <div class="nav-item active" onclick="switchTab('students')">🧑‍🎓 학생 & 자산 제어</div>
                 <div class="nav-item" onclick="switchTab('salary')">💰 세금 & 급여 일괄지급</div>
                 <div class="nav-item" onclick="switchTab('stocks')">📈 주식 시세 조정</div>
+                <div class="nav-item" onclick="switchTab('mart')">📦 마트 물품 관리</div> <!-- 신규 탭 -->
                 <div class="nav-item" onclick="switchTab('ranking')">🏆 랭킹 & 포트폴리오</div>
                 <div class="nav-item" onclick="switchTab('logs')">📋 거래 로그 감사</div>
                 <div class="nav-item" onclick="switchTab('seating')">🪑 자리배치 갱신</div>
@@ -144,6 +145,7 @@
 
         <div class="main-content">
             
+            <!-- 1. 학생 제어 탭 -->
             <div id="tab-students" class="tab-content active">
                 <h3>🧑‍🎓 개별 학생 제어 (포인트 & 신용등급)</h3>
                 <div class="control-panel">
@@ -177,6 +179,7 @@
                 </div>
             </div>
 
+            <!-- 2. 세금 및 일괄 급여 탭 -->
             <div id="tab-salary" class="tab-content">
                 <h3>💰 세금 설정 및 일괄 월급 지급</h3>
                 
@@ -220,6 +223,7 @@
                 </div>
             </div>
 
+            <!-- 3. 주식 컨트롤 탭 -->
             <div id="tab-stocks" class="tab-content">
                 <h3>📈 실시간 주식 시세 컨트롤</h3>
                 <div class="control-panel">
@@ -232,6 +236,62 @@
                 </div>
             </div>
 
+            <!-- 📦 4. 마트 물품 관리 탭 (신규) -->
+            <div id="tab-mart" class="tab-content">
+                <h3>📦 마트 물품 관리 (교사 창고 & 진열 매대)</h3>
+                <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">학생들은 <b>[매대 진열량]</b>만 볼 수 있습니다. 교사 창고에서 물건을 꺼내 매대로 이동시켜주세요.</p>
+                
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <!-- 창고 입고 -->
+                    <div class="control-panel" style="flex: 1; min-width: 300px;">
+                        <h4 style="width: 100%; margin-top: 0; color: var(--accent);">📥 창고 물품 입고 (기존/신규)</h4>
+                        <div class="input-group" style="width: 100%;">
+                            <label>물품명 (선택 또는 직접 입력)</label>
+                            <input type="text" id="martInputName" list="martDatalist" placeholder="예: 연필">
+                            <datalist id="martDatalist"></datalist>
+                        </div>
+                        <div style="display: flex; gap: 10px; width: 100%;">
+                            <div class="input-group">
+                                <label>판매 단가(P)</label>
+                                <input type="number" id="martInputPrice" placeholder="변경할 때만 입력">
+                            </div>
+                            <div class="input-group">
+                                <label>창고에 더할 수량</label>
+                                <input type="number" id="martInputStock" placeholder="예: 100">
+                            </div>
+                        </div>
+                        <button class="btn" style="width: 100%; background-color: var(--success);" onclick="addWarehouseStock()">창고 입고 및 단가 수정</button>
+                    </div>
+
+                    <!-- 매대 진열 -->
+                    <div class="control-panel" style="flex: 1; min-width: 300px; background-color: #1e293b;">
+                        <h4 style="width: 100%; margin-top: 0; color: var(--warning);">📤 매대 진열 (창고 ➡️ 매대)</h4>
+                        <div class="input-group" style="width: 100%;">
+                            <label>진열할 물품 선택</label>
+                            <select id="martMoveSelect"><option value="">로딩 중...</option></select>
+                        </div>
+                        <div class="input-group" style="width: 100%;">
+                            <label>매대로 옮길 수량 (창고 재고 차감)</label>
+                            <input type="number" id="martMoveQty" placeholder="예: 10">
+                        </div>
+                        <button class="btn" style="width: 100%; background-color: var(--warning); color: #000;" onclick="moveToDisplay()">매대에 진열하기 (수량 이동)</button>
+                    </div>
+                </div>
+
+                <h4 style="margin-top: 30px;">📋 전체 마트 인벤토리 현황</h4>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr><th>물품명</th><th>판매 단가</th><th>📦 창고 보관량 (비공개)</th><th>🛒 매대 진열량 (판매중)</th></tr>
+                        </thead>
+                        <tbody id="martAdminTableBody">
+                            <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">데이터를 불러오는 중...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 5. 랭킹 탭 -->
             <div id="tab-ranking" class="tab-content">
                 <h3>🏆 랭킹 스냅샷 동기화</h3>
                 <button class="btn" style="background-color: #8b5cf6; margin-bottom: 20px;" onclick="syncRanking()">🚀 전체 자산 재계산 및 TOP 5 갱신</button>
@@ -243,6 +303,7 @@
                 </div>
             </div>
 
+            <!-- 6. 로그 탭 -->
             <div id="tab-logs" class="tab-content">
                 <h3>📋 경제 활동 로그 감사</h3>
                 <button class="btn btn-outline" style="width: auto; margin-bottom: 15px;" onclick="loadLogs()">🔄 최신 로그 불러오기</button>
@@ -254,11 +315,12 @@
                 </div>
             </div>
 
+            <!-- 7. 자리배치 업로드 탭 -->
             <div id="tab-seating" class="tab-content">
                 <h3>🪑 학생 자리배치 일괄 갱신</h3>
                 <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">
                     매번 자리를 바꿀 때마다 <b>[번호, 이름, 위치]</b> 순서로 작성된 텍스트 파일(.txt) 또는 CSV 파일을 업로드해주세요.<br>
-                    <span style="color: var(--warning);">* 파일은 반드시 <b>UTF-8</b> 인코딩으로 저장되어야 한글이 깨지지 않습니다. (메모장 > 다른 이름으로 저장 > 인코딩: UTF-8)</span>
+                    <span style="color: var(--warning);">* 파일은 반드시 <b>UTF-8</b> 인코딩으로 저장되어야 한글이 깨지지 않습니다.</span>
                 </p>
                 
                 <div class="control-panel">
@@ -285,6 +347,7 @@
         </div>
     </div>
 
+    <!-- 인쇄용 백업 섹션 -->
     <div id="printSection">
         <h1 style="text-align: center; margin-bottom: 5px;">2026 새움 학급경제활동 월급 명세서</h1>
         <p id="printDate" style="text-align: right; font-size: 12px; margin-bottom: 20px;">출력일시: </p>
@@ -298,6 +361,7 @@
         </table>
     </div>
 
+    <!-- 스크립트 엔진 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, getDocs, getDoc, doc, updateDoc, addDoc, setDoc, query, orderBy, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -331,6 +395,7 @@
             if(tabId === 'stocks') loadStocks();
             if(tabId === 'salary') loadTaxSettings();
             if(tabId === 'ranking') loadCurrentRanking();
+            if(tabId === 'mart') loadMartAdminData(); // 마트 데이터 로드 호출
         };
 
         async function initAdmin() {
@@ -515,9 +580,7 @@
         window.updateStock = async function() {
             const sId = document.getElementById('targetStock').value;
             const np = parseInt(document.getElementById('newPrice').value);
-            
             if(!sId || isNaN(np)) return alert('변경할 종목과 새로운 시세를 정확히 입력해주세요.');
-            
             try {
                 const stockRef = doc(db, "stocks", sId);
                 await updateDoc(stockRef, { 현재가: np });
@@ -526,14 +589,110 @@
                     price: np, 
                     timestamp: serverTimestamp() 
                 });
-                
                 alert(`✅ [${sId}] 종목의 시세가 ${np.toLocaleString()}P로 확정 및 기록되었습니다.`);
                 document.getElementById('newPrice').value = ''; 
                 loadStocks();
-            } catch(e) { 
-                console.error(e); 
-                alert('❌ 시세 업데이트 중 오류가 발생했습니다.\n에러 내용: ' + e.message); 
-            }
+            } catch(e) { console.error(e); alert('❌ 시세 업데이트 중 오류가 발생했습니다.\n에러 내용: ' + e.message); }
+        };
+
+        // 📦 마트 관리 기능 추가
+        window.loadMartAdminData = async function() {
+            try {
+                const snap = await getDocs(collection(db, "mart_items"));
+                const tbody = document.getElementById('martAdminTableBody');
+                const moveSelect = document.getElementById('martMoveSelect');
+                const datalist = document.getElementById('martDatalist');
+                
+                tbody.innerHTML = '';
+                moveSelect.innerHTML = '<option value="">-- 진열할 물품 선택 --</option>';
+                datalist.innerHTML = '';
+                
+                snap.forEach(docSnap => {
+                    const d = docSnap.data();
+                    const name = d.물품명 || docSnap.id;
+                    const price = d.가격 || 0;
+                    const wStock = d.창고보관량 || 0;
+                    const dStock = d.마트재고량 || 0;
+
+                    tbody.innerHTML += `<tr>
+                        <td><strong>${name}</strong></td>
+                        <td style="color:var(--accent); font-weight:bold;">${price.toLocaleString()}P</td>
+                        <td style="color:var(--warning); font-weight:bold;">${wStock.toLocaleString()}개</td>
+                        <td style="color:var(--success); font-weight:bold;">${dStock.toLocaleString()}개</td>
+                    </tr>`;
+
+                    moveSelect.innerHTML += `<option value="${docSnap.id}">${name} (창고: ${wStock}개 / 매대: ${dStock}개)</option>`;
+                    datalist.innerHTML += `<option value="${name}">`;
+                });
+            } catch(e) { console.error("마트 관리 로드 에러:", e); }
+        };
+
+        window.addWarehouseStock = async function() {
+            const name = document.getElementById('martInputName').value.trim();
+            const price = parseInt(document.getElementById('martInputPrice').value);
+            const addQty = parseInt(document.getElementById('martInputStock').value);
+            
+            if(!name) return alert('물품명을 입력하세요.');
+            
+            try {
+                const itemRef = doc(db, "mart_items", name);
+                const snap = await getDoc(itemRef);
+                
+                let newPrice = isNaN(price) ? 0 : price;
+                let newWStock = isNaN(addQty) ? 0 : addQty;
+                let newDStock = 0;
+
+                if(snap.exists()) {
+                    const d = snap.data();
+                    newWStock += (d.창고보관량 || 0);
+                    if(isNaN(price)) newPrice = d.가격 || 0; // 가격 비웠으면 기존 가격 유지
+                    newDStock = d.마트재고량 || 0;
+                }
+                
+                await setDoc(itemRef, {
+                    물품명: name,
+                    가격: newPrice,
+                    창고보관량: newWStock,
+                    마트재고량: newDStock
+                }, { merge: true });
+                
+                alert(`✅ [${name}] 창고 입고 처리 완료! (현재 창고: ${newWStock}개)`);
+                document.getElementById('martInputName').value = '';
+                document.getElementById('martInputPrice').value = '';
+                document.getElementById('martInputStock').value = '';
+                loadMartAdminData();
+            } catch(e) { console.error(e); alert('오류 발생'); }
+        };
+
+        window.moveToDisplay = async function() {
+            const name = document.getElementById('martMoveSelect').value;
+            const qty = parseInt(document.getElementById('martMoveQty').value);
+            
+            if(!name || isNaN(qty) || qty <= 0) return alert('물품을 선택하고 이동할 수량을 정확히 입력하세요.');
+            
+            try {
+                const itemRef = doc(db, "mart_items", name);
+                
+                await runTransaction(db, async (t) => {
+                    const snap = await t.get(itemRef);
+                    if(!snap.exists()) throw "물품 데이터가 없습니다.";
+                    
+                    const d = snap.data();
+                    const wStock = d.창고보관량 || 0;
+                    const dStock = d.마트재고량 || 0;
+                    
+                    if(wStock < qty) throw `창고 보관량이 부족합니다. (현재 창고: ${wStock}개)`;
+                    
+                    t.update(itemRef, {
+                        창고보관량: wStock - qty,
+                        마트재고량: dStock + qty
+                    });
+                });
+                
+                alert(`✅ [${name}] ${qty}개를 매대로 이동(진열)했습니다!`);
+                document.getElementById('martMoveQty').value = '';
+                loadMartAdminData();
+            } catch(e) { console.error(e); alert('❌ 오류: ' + e); }
         };
 
         window.syncRanking = async function() {
@@ -608,7 +767,6 @@
             } catch(e) { alert('로그 로딩 에러'); }
         };
 
-        // 🌟 6. 자리배치 업로드 기능 (이름 기반 매칭)
         window.uploadSeatingFile = async function() {
             const fileInput = document.getElementById('seatingFileInput');
             const file = fileInput.files[0];
@@ -617,16 +775,13 @@
             const reader = new FileReader();
             reader.onload = async function(e) {
                 const text = e.target.result;
-                // 줄바꿈으로 분리 후 빈 줄 제거
                 const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
                 
-                // 헤더(번호,이름,위치)가 있으면 첫 줄 제거
                 if(lines[0].includes('이름') || lines[0].includes('번호')) {
                     lines.shift();
                 }
 
                 try {
-                    // DB에서 모든 학생을 가져와서 '이름 -> 문서ID' 매핑 사전을 만듭니다.
                     const stuSnap = await getDocs(collection(db, "students"));
                     let nameToIdMap = {};
                     stuSnap.forEach(docSnap => {
@@ -637,17 +792,15 @@
                     let count = 0;
                     let resultHtml = '';
 
-                    // 파일의 각 줄을 분석하여 갱신할 내용 파악
                     lines.forEach(line => {
                         const parts = line.split(',');
                         if(parts.length >= 3) {
-                            const name = parts[1].trim(); // 파일의 두 번째 항목: 이름
-                            const seat = parts[2].trim(); // 파일의 세 번째 항목: 위치 (앞/중간/뒤)
+                            const name = parts[1].trim(); 
+                            const seat = parts[2].trim(); 
 
-                            const studentId = nameToIdMap[name]; // 이름으로 학번 찾기
+                            const studentId = nameToIdMap[name]; 
                             
                             if(studentId) {
-                                // 파이어베이스 문서 업데이트 큐에 추가
                                 promises.push(updateDoc(doc(db, "students", studentId), { 자리위치: seat }));
                                 count++;
                                 resultHtml += `<tr>
@@ -656,7 +809,6 @@
                                     <td style="color:var(--success); font-weight:bold;">완료</td>
                                 </tr>`;
                             } else {
-                                // DB에 없는 이름일 경우 실패 처리
                                 resultHtml += `<tr>
                                     <td><strong>${name}</strong></td>
                                     <td>${seat}</td>
@@ -666,7 +818,6 @@
                         }
                     });
 
-                    // 파이어베이스에 일괄 갱신 전송
                     await Promise.all(promises);
                     
                     document.getElementById('seatingResultBody').innerHTML = resultHtml;
@@ -677,8 +828,6 @@
                     alert('❌ DB 갱신 중 오류가 발생했습니다. 개발자 도구를 확인하세요.');
                 }
             };
-            
-            // UTF-8 인코딩으로 파일 읽기 (한글 깨짐 방지)
             reader.readAsText(file, "UTF-8"); 
         };
     </script>
