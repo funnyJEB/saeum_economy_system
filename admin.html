@@ -65,14 +65,12 @@
         th { background-color: #374151; color: #d1d5db; white-space: nowrap; }
         tr:hover { background-color: #2d3748; }
 
-        /* 입력 폼 및 그리드 컨트롤 개편 */
+        /* 입력 폼 및 그리드 컨트롤 */
         .control-panel {
             background-color: var(--card-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border);
             display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; margin-bottom: 20px;
             box-sizing: border-box;
         }
-        
-        /* 세금 설정 패널 전용 독립 컨테이너 설계 */
         .tax-panel {
             background-color: var(--card-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border);
             margin-bottom: 20px; box-sizing: border-box; display: block; width: 100%;
@@ -81,8 +79,6 @@
             width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px; box-sizing: border-box;
         }
         .input-group { display: flex; flex-direction: column; gap: 6px; box-sizing: border-box; }
-        
-        /* Grid 내부 구조용 가변 크기 확보 */
         .control-panel .input-group { flex: 1; min-width: 150px; } 
         
         .input-group label { font-size: 13px; color: var(--text-muted); font-weight: bold; }
@@ -94,26 +90,20 @@
         .ratio-bar { width: 100%; height: 12px; background: #374151; border-radius: 6px; display: flex; overflow: hidden; margin-bottom: 4px; }
         .ratio-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
 
-        /* 모바일 최적화 및 삐짐방지 완벽 보완 */
+        /* 모바일 최적화 */
         @media (max-width: 768px) {
             #dashboard { flex-direction: column; }
             .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
             .nav-menu { display: flex; overflow-x: auto; white-space: nowrap; padding: 0; }
             .nav-item { border-left: none; border-bottom: 3px solid transparent; padding: 12px 15px; }
             .nav-item.active { border-left: none; border-bottom: 3px solid var(--accent); }
-            
             .control-panel { flex-direction: column; align-items: stretch; }
             .control-panel .input-group { width: 100%; }
-            
-            .tax-grid { 
-                grid-template-columns: repeat(2, 1fr) !important; 
-                width: 100% !important; 
-                box-sizing: border-box !important;
-            }
+            .tax-grid { grid-template-columns: repeat(2, 1fr) !important; width: 100% !important; box-sizing: border-box !important; }
             .btn { width: 100% !important; }
         }
 
-        /* 인쇄 전용 CSS 환경 설정 */
+        /* 인쇄 전용 CSS */
         @media print {
             body, html { background: white !important; color: black !important; height: auto !important; overflow: visible !important; }
             #dashboard, #loginOverlay { display: none !important; }
@@ -122,7 +112,6 @@
             th { background-color: #f3f4f6 !important; color: #000 !important; border: 1px solid #000 !important; padding: 8px !important; }
             td { border-bottom: 1px solid #000 !important; border-right: 1px solid #e5e7eb !important; color: #000 !important; padding: 8px !important; }
         }
-
         #printSection { display: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -149,6 +138,7 @@
                 <div class="nav-item" onclick="switchTab('stocks')">📈 주식 시세 조정</div>
                 <div class="nav-item" onclick="switchTab('ranking')">🏆 랭킹 & 포트폴리오</div>
                 <div class="nav-item" onclick="switchTab('logs')">📋 거래 로그 감사</div>
+                <div class="nav-item" onclick="switchTab('seating')">🪑 자리배치 갱신</div>
             </div>
         </div>
 
@@ -264,6 +254,34 @@
                 </div>
             </div>
 
+            <div id="tab-seating" class="tab-content">
+                <h3>🪑 학생 자리배치 일괄 갱신</h3>
+                <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;">
+                    매번 자리를 바꿀 때마다 <b>[번호, 이름, 위치]</b> 순서로 작성된 텍스트 파일(.txt) 또는 CSV 파일을 업로드해주세요.<br>
+                    <span style="color: var(--warning);">* 파일은 반드시 <b>UTF-8</b> 인코딩으로 저장되어야 한글이 깨지지 않습니다. (메모장 > 다른 이름으로 저장 > 인코딩: UTF-8)</span>
+                </p>
+                
+                <div class="control-panel">
+                    <div class="input-group" style="flex: 2;">
+                        <label>자리배치 파일 첨부 (.txt, .csv)</label>
+                        <input type="file" id="seatingFileInput" accept=".txt, .csv" style="padding: 8px; font-size: 14px; cursor: pointer;">
+                    </div>
+                    <button class="btn" style="width: auto; background-color: var(--success);" onclick="uploadSeatingFile()">파일 읽기 및 DB 갱신</button>
+                </div>
+
+                <h4 style="margin-top: 30px;">📋 갱신 처리 결과</h4>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr><th>이름 (매칭된 학번)</th><th>입력된 자리위치</th><th>처리 결과</th></tr>
+                        </thead>
+                        <tbody id="seatingResultBody">
+                            <tr><td colspan="3" style="text-align: center; color: var(--text-muted);">업로드 대기 중...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -374,7 +392,6 @@
             });
         };
 
-        // 🌟 수정: 수수료율 필드 추가
         async function loadTaxSettings() {
             const snap = await getDoc(doc(db, "system", "settings"));
             if(snap.exists()) {
@@ -387,7 +404,6 @@
             }
         }
 
-        // 🌟 수정: 수수료율 소수점(parseFloat) 저장
         window.saveTaxSettings = async function() {
             await setDoc(doc(db, "system", "settings"), {
                 공과금: parseInt(document.getElementById('setUtility').value||0),
@@ -399,7 +415,6 @@
             alert('세금 및 수수료 설정이 DB에 성공적으로 저장되었습니다.');
         };
 
-        // 🌟 수정: 자리위치 한글('앞', '중간', '뒤') 인식 로직 적용
         window.executeBatchSalary = async function() {
             if(!confirm("전체 학생의 월급을 일괄 지급하시겠습니까?")) return;
             try {
@@ -423,7 +438,6 @@
                     const util = settings.공과금 || 0;
                     
                     let seatTax = 0;
-                    // 한글 자리 검사로 변경됨
                     if(st.자리위치 === '앞') seatTax = settings.부동산세_앞 || 0;
                     if(st.자리위치 === '중간') seatTax = settings.부동산세_중간 || 0;
                     if(st.자리위치 === '뒤') seatTax = settings.부동산세_뒤 || 0;
@@ -440,7 +454,6 @@
             } catch(e) { console.error(e); alert("오류 발생"); }
         };
 
-        // 🌟 수정: 자리위치 한글('앞', '중간', '뒤') 인식 로직 적용
         window.generatePayrollReport = async function() {
             try {
                 const setSnap = await getDoc(doc(db, "system", "settings"));
@@ -463,7 +476,6 @@
                     const util = settings.공과금 || 0;
                     
                     let seatTax = 0;
-                    // 한글 자리 검사로 변경됨
                     if(st.자리위치 === '앞') seatTax = settings.부동산세_앞 || 0;
                     if(st.자리위치 === '중간') seatTax = settings.부동산세_중간 || 0;
                     if(st.자리위치 === '뒤') seatTax = settings.부동산세_뒤 || 0;
@@ -500,7 +512,6 @@
             });
         }
 
-        // 주식 시세 업데이트 (트랜잭션 오류 완벽 해결 버전)
         window.updateStock = async function() {
             const sId = document.getElementById('targetStock').value;
             const np = parseInt(document.getElementById('newPrice').value);
@@ -508,13 +519,8 @@
             if(!sId || isNaN(np)) return alert('변경할 종목과 새로운 시세를 정확히 입력해주세요.');
             
             try {
-                // 트랜잭션 오류를 방지하는 안전한 순차적 업데이트 방식
                 const stockRef = doc(db, "stocks", sId);
-                
-                // 1. 종목의 '현재가' 업데이트
                 await updateDoc(stockRef, { 현재가: np });
-                
-                // 2. 학생들 차트용 'price_history' 하위 컬렉션에 날짜와 가격 누적 기록
                 await addDoc(collection(db, "stocks", sId, "price_history"), { 
                     date: new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.',''), 
                     price: np, 
@@ -523,10 +529,9 @@
                 
                 alert(`✅ [${sId}] 종목의 시세가 ${np.toLocaleString()}P로 확정 및 기록되었습니다.`);
                 document.getElementById('newPrice').value = ''; 
-                loadStocks(); // 표 새로고침
-                
+                loadStocks();
             } catch(e) { 
-                console.error("주식 시세 업데이트 에러:", e); 
+                console.error(e); 
                 alert('❌ 시세 업데이트 중 오류가 발생했습니다.\n에러 내용: ' + e.message); 
             }
         };
@@ -540,10 +545,8 @@
                 let arr = [];
                 stuSnap.forEach(dSnap => {
                     const d = dSnap.data(); let stV = 0;
-                    // 주식 자산 계산
                     if(d.보유주식) Object.entries(d.보유주식).forEach(([k,v]) => stV += v * (pMap[k]||0));
                     
-                    // 적금 자산 정밀 합산 (가입된 모든 적금의 (유형 * 현재회차) 합계 연산)
                     let pt = d.포인트||0, sv = 0;
                     if(d.적금 && typeof d.적금 === 'object') {
                         Object.values(d.적금).forEach(svInfo => {
@@ -603,6 +606,80 @@
                     tb.innerHTML += `<tr><td style="color:var(--text-muted);font-size:13px;">${d.dtStr}</td><td><strong>${d.ID||'-'}</strong></td><td>${d.유형||'-'}</td><td>${d.항목||'-'}</td><td style="color:${clr};font-weight:bold;">${d.변동금액>0?'+':''}${(d.변동금액||0).toLocaleString()}</td><td style="font-size:13px;">${d.내용||'-'}</td></tr>`;
                 });
             } catch(e) { alert('로그 로딩 에러'); }
+        };
+
+        // 🌟 6. 자리배치 업로드 기능 (이름 기반 매칭)
+        window.uploadSeatingFile = async function() {
+            const fileInput = document.getElementById('seatingFileInput');
+            const file = fileInput.files[0];
+            if(!file) return alert('업로드할 텍스트 파일(.txt) 또는 .csv 파일을 선택해주세요.');
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                // 줄바꿈으로 분리 후 빈 줄 제거
+                const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+                
+                // 헤더(번호,이름,위치)가 있으면 첫 줄 제거
+                if(lines[0].includes('이름') || lines[0].includes('번호')) {
+                    lines.shift();
+                }
+
+                try {
+                    // DB에서 모든 학생을 가져와서 '이름 -> 문서ID' 매핑 사전을 만듭니다.
+                    const stuSnap = await getDocs(collection(db, "students"));
+                    let nameToIdMap = {};
+                    stuSnap.forEach(docSnap => {
+                        nameToIdMap[docSnap.data().이름] = docSnap.id;
+                    });
+
+                    let promises = [];
+                    let count = 0;
+                    let resultHtml = '';
+
+                    // 파일의 각 줄을 분석하여 갱신할 내용 파악
+                    lines.forEach(line => {
+                        const parts = line.split(',');
+                        if(parts.length >= 3) {
+                            const name = parts[1].trim(); // 파일의 두 번째 항목: 이름
+                            const seat = parts[2].trim(); // 파일의 세 번째 항목: 위치 (앞/중간/뒤)
+
+                            const studentId = nameToIdMap[name]; // 이름으로 학번 찾기
+                            
+                            if(studentId) {
+                                // 파이어베이스 문서 업데이트 큐에 추가
+                                promises.push(updateDoc(doc(db, "students", studentId), { 자리위치: seat }));
+                                count++;
+                                resultHtml += `<tr>
+                                    <td><strong>${name}</strong> <span style="font-size:12px; color:var(--text-muted);">(${studentId})</span></td>
+                                    <td>${seat}</td>
+                                    <td style="color:var(--success); font-weight:bold;">완료</td>
+                                </tr>`;
+                            } else {
+                                // DB에 없는 이름일 경우 실패 처리
+                                resultHtml += `<tr>
+                                    <td><strong>${name}</strong></td>
+                                    <td>${seat}</td>
+                                    <td style="color:var(--danger); font-weight:bold;">실패 (등록되지 않은 이름)</td>
+                                </tr>`;
+                            }
+                        }
+                    });
+
+                    // 파이어베이스에 일괄 갱신 전송
+                    await Promise.all(promises);
+                    
+                    document.getElementById('seatingResultBody').innerHTML = resultHtml;
+                    alert(`✅ 총 ${count}명의 자리 위치가 성공적으로 갱신되었습니다.`);
+                    
+                } catch(err) {
+                    console.error(err);
+                    alert('❌ DB 갱신 중 오류가 발생했습니다. 개발자 도구를 확인하세요.');
+                }
+            };
+            
+            // UTF-8 인코딩으로 파일 읽기 (한글 깨짐 방지)
+            reader.readAsText(file, "UTF-8"); 
         };
     </script>
 </body>
