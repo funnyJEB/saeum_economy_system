@@ -154,7 +154,6 @@
 
         <div class="main-content">
             
-            <!-- 1. 학생 제어 탭 -->
             <div id="tab-students" class="tab-content active">
                 <h3>🧑‍🎓 개별 학생 제어 (포인트 & 신용등급)</h3>
                 <div class="control-panel">
@@ -188,7 +187,6 @@
                 </div>
             </div>
 
-            <!-- 2. 세금 및 일괄 급여 탭 -->
             <div id="tab-salary" class="tab-content">
                 <h3>💰 세금 설정 및 일괄 월급 지급</h3>
                 
@@ -199,8 +197,14 @@
                         <div class="input-group"><label>중간자리 부동산세</label><input type="number" id="setMiddle"></div>
                         <div class="input-group"><label>뒷자리 부동산세</label><input type="number" id="setBack"></div>
                     </div>
+                    <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <div class="input-group" style="width: 100%; max-width: 300px;">
+                            <label>📈 주식 거래 수수료율 (예: 0.01 = 1%)</label>
+                            <input type="number" id="setFeeRate" step="0.01" placeholder="예: 0.01">
+                        </div>
+                    </div>
                     <div style="text-align: right;">
-                        <button class="btn" style="width: auto; background-color: var(--success);" onclick="saveTaxSettings()">세금 기준 저장</button>
+                        <button class="btn" style="width: auto; background-color: var(--success);" onclick="saveTaxSettings()">세금 및 수수료 기준 저장</button>
                     </div>
                 </div>
 
@@ -217,7 +221,6 @@
                 <div class="table-wrapper">
                     <table>
                         <thead>
-                            <!-- 표 헤더 명칭 '전기/수도세'로 변경 완료 -->
                             <tr><th>학번/이름</th><th>직업</th><th>기본급</th><th>건보료</th><th>자리세</th><th>전기/수도세</th><th>성과급</th><th>실지급액</th></tr>
                         </thead>
                         <tbody id="payrollReportBody">
@@ -227,7 +230,6 @@
                 </div>
             </div>
 
-            <!-- 3. 주식 컨트롤 탭 -->
             <div id="tab-stocks" class="tab-content">
                 <h3>📈 실시간 주식 시세 컨트롤</h3>
                 <div class="control-panel">
@@ -240,7 +242,6 @@
                 </div>
             </div>
 
-            <!-- 4. 랭킹 탭 -->
             <div id="tab-ranking" class="tab-content">
                 <h3>🏆 랭킹 스냅샷 동기화</h3>
                 <button class="btn" style="background-color: #8b5cf6; margin-bottom: 20px;" onclick="syncRanking()">🚀 전체 자산 재계산 및 TOP 5 갱신</button>
@@ -252,7 +253,6 @@
                 </div>
             </div>
 
-            <!-- 5. 로그 탭 -->
             <div id="tab-logs" class="tab-content">
                 <h3>📋 경제 활동 로그 감사</h3>
                 <button class="btn btn-outline" style="width: auto; margin-bottom: 15px;" onclick="loadLogs()">🔄 최신 로그 불러오기</button>
@@ -267,14 +267,12 @@
         </div>
     </div>
 
-    <!-- 인쇄용 백업 섹션 -->
     <div id="printSection">
         <h1 style="text-align: center; margin-bottom: 5px;">2026 새움 학급경제활동 월급 명세서</h1>
         <p id="printDate" style="text-align: right; font-size: 12px; margin-bottom: 20px;">출력일시: </p>
         <table>
             <thead>
                 <tr>
-                    <!-- 표 헤더 명칭 '전기/수도세'로 변경 완료 -->
                     <th>학번/이름</th><th>직업명</th><th>기본급</th><th>건강보험(15%)</th><th>부동산세</th><th>전기/수도세</th><th>성과급</th><th>실지급액</th>
                 </tr>
             </thead>
@@ -282,7 +280,6 @@
         </table>
     </div>
 
-    <!-- 스크립트 엔진 -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, getDocs, getDoc, doc, updateDoc, addDoc, setDoc, query, orderBy, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -377,6 +374,7 @@
             });
         };
 
+        // 🌟 수정: 수수료율 필드 추가
         async function loadTaxSettings() {
             const snap = await getDoc(doc(db, "system", "settings"));
             if(snap.exists()) {
@@ -385,19 +383,23 @@
                 document.getElementById('setFront').value = d.부동산세_앞 || 0;
                 document.getElementById('setMiddle').value = d.부동산세_중간 || 0;
                 document.getElementById('setBack').value = d.부동산세_뒤 || 0;
+                document.getElementById('setFeeRate').value = d.거래수수료율 || 0;
             }
         }
 
+        // 🌟 수정: 수수료율 소수점(parseFloat) 저장
         window.saveTaxSettings = async function() {
             await setDoc(doc(db, "system", "settings"), {
                 공과금: parseInt(document.getElementById('setUtility').value||0),
                 부동산세_앞: parseInt(document.getElementById('setFront').value||0),
                 부동산세_중간: parseInt(document.getElementById('setMiddle').value||0),
-                부동산세_뒤: parseInt(document.getElementById('setBack').value||0)
+                부동산세_뒤: parseInt(document.getElementById('setBack').value||0),
+                거래수수료율: parseFloat(document.getElementById('setFeeRate').value||0)
             }, { merge: true });
-            alert('세금 설정이 DB에 성공적으로 저장되었습니다.');
+            alert('세금 및 수수료 설정이 DB에 성공적으로 저장되었습니다.');
         };
 
+        // 🌟 수정: 자리위치 한글('앞', '중간', '뒤') 인식 로직 적용
         window.executeBatchSalary = async function() {
             if(!confirm("전체 학생의 월급을 일괄 지급하시겠습니까?")) return;
             try {
@@ -419,7 +421,9 @@
 
                     const health = Math.floor(base * 0.15);
                     const util = settings.공과금 || 0;
+                    
                     let seatTax = 0;
+                    // 한글 자리 검사로 변경됨
                     if(st.자리위치 === '앞') seatTax = settings.부동산세_앞 || 0;
                     if(st.자리위치 === '중간') seatTax = settings.부동산세_중간 || 0;
                     if(st.자리위치 === '뒤') seatTax = settings.부동산세_뒤 || 0;
@@ -428,7 +432,6 @@
                     const finalPay = base - health - seatTax - util + perf;
                     
                     promises.push(updateDoc(doc(db, "students", sid), { 포인트: (st.포인트 || 0) + finalPay, 성과급카운트: 0 }));
-                    // 로그 기록 명칭도 '전기/수도세'로 직관화
                     promises.push(addDoc(collection(db, "logs"), { ID: sid, 항목: "일괄월급", 유형: "포인트", 변동금액: finalPay, 내용: `기본:${base} | 건보:-${health} | 자릿세:-${seatTax} | 전기/수도세:-${util} | 성과:+${perf}`, 일시: serverTimestamp() }));
                     count++;
                 });
@@ -437,6 +440,7 @@
             } catch(e) { console.error(e); alert("오류 발생"); }
         };
 
+        // 🌟 수정: 자리위치 한글('앞', '중간', '뒤') 인식 로직 적용
         window.generatePayrollReport = async function() {
             try {
                 const setSnap = await getDoc(doc(db, "system", "settings"));
@@ -457,7 +461,9 @@
 
                     const health = Math.floor(base * 0.15);
                     const util = settings.공과금 || 0;
+                    
                     let seatTax = 0;
+                    // 한글 자리 검사로 변경됨
                     if(st.자리위치 === '앞') seatTax = settings.부동산세_앞 || 0;
                     if(st.자리위치 === '중간') seatTax = settings.부동산세_중간 || 0;
                     if(st.자리위치 === '뒤') seatTax = settings.부동산세_뒤 || 0;
@@ -494,7 +500,7 @@
             });
         }
 
-        // 3. 주식 시세 업데이트 (트랜잭션 오류 완벽 해결 버전)
+        // 주식 시세 업데이트 (트랜잭션 오류 완벽 해결 버전)
         window.updateStock = async function() {
             const sId = document.getElementById('targetStock').value;
             const np = parseInt(document.getElementById('newPrice').value);
@@ -537,7 +543,7 @@
                     // 주식 자산 계산
                     if(d.보유주식) Object.entries(d.보유주식).forEach(([k,v]) => stV += v * (pMap[k]||0));
                     
-                    // ⚠️ 수정된 핵심 로직: 적금 자산 정밀 합산 (가입된 모든 적금의 (유형 * 현재회차) 합계 연산)
+                    // 적금 자산 정밀 합산 (가입된 모든 적금의 (유형 * 현재회차) 합계 연산)
                     let pt = d.포인트||0, sv = 0;
                     if(d.적금 && typeof d.적금 === 'object') {
                         Object.values(d.적금).forEach(svInfo => {
