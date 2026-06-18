@@ -420,9 +420,9 @@
                     const health = Math.floor(base * 0.15);
                     const util = settings.공과금 || 0;
                     let seatTax = 0;
-                    if(st.자리위치 === 'front') seatTax = settings.부동산세_앞 || 0;
-                    if(st.자리위치 === 'middle') seatTax = settings.부동산세_중간 || 0;
-                    if(st.자리위치 === 'back') seatTax = settings.부동산세_뒤 || 0;
+                    if(st.자리위치 === '앞') seatTax = settings.부동산세_앞 || 0;
+                    if(st.자리위치 === '중간') seatTax = settings.부동산세_중간 || 0;
+                    if(st.자리위치 === '뒤') seatTax = settings.부동산세_뒤 || 0;
 
                     let perf = st.성과급카운트 || 0; if(perf > 30) perf = 30;
                     const finalPay = base - health - seatTax - util + perf;
@@ -458,9 +458,9 @@
                     const health = Math.floor(base * 0.15);
                     const util = settings.공과금 || 0;
                     let seatTax = 0;
-                    if(st.자리위치 === 'front') seatTax = settings.부동산세_앞 || 0;
-                    if(st.자리위치 === 'middle') seatTax = settings.부동산세_중간 || 0;
-                    if(st.자리위치 === 'back') seatTax = settings.부동산세_뒤 || 0;
+                    if(st.자리위치 === '앞') seatTax = settings.부동산세_앞 || 0;
+                    if(st.자리위치 === '중간') seatTax = settings.부동산세_중간 || 0;
+                    if(st.자리위치 === '뒤') seatTax = settings.부동산세_뒤 || 0;
 
                     let perf = st.성과급카운트 || 0; if(perf > 30) perf = 30;
                     const finalPay = base - health - seatTax - util + perf;
