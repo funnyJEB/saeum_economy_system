@@ -173,7 +173,7 @@
                 </div>
                 <div class="table-wrapper" id="studentTableWrapper" style="display: none;">
                     <table>
-                        <thead><tr><th>학번/이름</th><th>직업</th><th>현금</th><th>신용등급</th><th>성과급카운트</th></tr></thead>
+                        <thead><tr><th>학번/이름</th><th>직업</th><th>현금</th><th>신용등급</th><th>보유 주식</th><th>성과급카운트</th></tr></thead>
                         <tbody id="studentTableBody"></tbody>
                     </table>
                 </div>
@@ -446,14 +446,37 @@
 
         window.loadAllStudentsTable = async function() {
             const tbody = document.getElementById('studentTableBody');
-            tbody.innerHTML = '<tr><td colspan="5">로딩 중...</td></tr>';
+            // 열이 하나 추가되었으므로 colspan을 6으로 확장합니다.
+            tbody.innerHTML = '<tr><td colspan="6">로딩 중...</td></tr>';
             document.getElementById('studentTableWrapper').style.display = 'block';
             
             const snap = await getDocs(collection(db, "students"));
             tbody.innerHTML = '';
+            
             snap.forEach(dSnap => {
                 const d = dSnap.data();
-                tbody.innerHTML += `<tr><td><strong>${dSnap.id}</strong> ${d.이름}</td><td>${d.직업명 || '-'}</td><td style="color:var(--accent); font-weight:bold;">${(d.포인트||0).toLocaleString()}P</td><td>${d.신용등급 || '-'}</td><td style="color:var(--warning);">${d.성과급카운트 || 0} 건</td></tr>`;
+                
+                // 🌟 주식 보유 데이터를 가공하는 로직 추가
+                let stockDisplay = "-";
+                if (d.보유주식 && typeof d.보유주식 === 'object') {
+                    const stockEntries = Object.entries(d.보유주식)
+                        .filter(([_, qty]) => qty > 0) // 0주 초과인 것만 필터링
+                        .map(([name, qty]) => `${name}(${qty}주)`);
+                    
+                    if (stockEntries.length > 0) {
+                        stockDisplay = stockEntries.join(', '); // 예: "새움전력(5주), 마트(2주)"
+                    }
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${dSnap.id}</strong> ${d.이름}</td>
+                        <td>${d.직업명 || '-'}</td>
+                        <td style="color:var(--accent); font-weight:bold;">${(d.포인트||0).toLocaleString()}P</td>
+                        <td>${d.신용등급 || '-'}</td>
+                        <td style="color:var(--text-main); font-size:13px; font-weight:500;">${stockDisplay}</td>
+                        <td style="color:var(--warning);">${d.성과급카운트 || 0} 건</td>
+                    </tr>`;
             });
         };
 
