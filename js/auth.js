@@ -43,30 +43,39 @@ window.executePwChange = async function() {
 
 // === 아바타 설정 모달 로직 ===
 window.openAvatarChangeModal = function() {
-    window.closeModal(); 
-    
-    // 현재 세션의 아바타 모드와 얼굴 타입을 읽어서 라디오 버튼 세팅 (기본값 설정)
-    const currentMode = window.currentUserData?.현재아바타모드 || 'photo';
-    const currentFace = window.currentUserData?.아바타얼굴 || 'typeA';
-    
-    const modeBtn = document.querySelector(`input[name="avatarMode"][value="${currentMode}"]`);
-    if(modeBtn) modeBtn.checked = true;
-    
-    const faceBtn = document.querySelector(`input[name="avatarFace"][value="${currentFace}"]`);
-    if(faceBtn) faceBtn.checked = true;
-    
-    window.toggleAvatarFaceSelect(); // 열릴 때 캐릭터 메뉴 표시 여부 체크
-    document.getElementById("avatarChangeModal").classList.add("active");
+    try {
+        window.closeModal(); 
+        
+        // 현재 세션의 아바타 모드와 얼굴 타입을 읽어서 라디오 버튼 세팅 (기본값 설정)
+        const currentMode = window.currentUserData?.현재아바타모드 || 'photo';
+        const currentFace = window.currentUserData?.아바타얼굴 || 'typeA';
+        
+        const modeBtn = document.querySelector(`input[name="avatarMode"][value="${currentMode}"]`);
+        if(modeBtn) modeBtn.checked = true;
+        
+        const faceBtn = document.querySelector(`input[name="avatarFace"][value="${currentFace}"]`);
+        if(faceBtn) faceBtn.checked = true;
+        
+        window.toggleAvatarFaceSelect(); // 열릴 때 캐릭터 메뉴 표시 여부 체크
+        document.getElementById("avatarChangeModal").classList.add("active");
+    } catch (e) {
+        console.error("모달 열기 에러:", e);
+        window.showSystemAlert("창을 여는 중 오류가 발생했습니다. 새로고침 후 다시 시도해주세요.", true);
+    }
 };
 
 window.closeAvatarChangeModal = function() {
     document.getElementById("avatarChangeModal").classList.remove("active");
 };
 
-// 캐릭터 선택 시에만 얼굴 선택창을 보여주는 토글 함수
+// 캐릭터 선택 시에만 얼굴 선택창을 보여주는 토글 함수 (안전장치 추가)
 window.toggleAvatarFaceSelect = function() {
-    const selectedMode = document.querySelector('input[name="avatarMode"]:checked').value;
+    const selectedModeBtn = document.querySelector('input[name="avatarMode"]:checked');
+    if (!selectedModeBtn) return; // 에러 방어: 아무것도 선택되지 않았을 때 자바스크립트 멈춤 방지
+
+    const selectedMode = selectedModeBtn.value;
     const faceGroup = document.getElementById("avatarFaceGroup");
+    
     if (selectedMode === 'custom') {
         faceGroup.style.display = "block";
     } else {
@@ -77,8 +86,17 @@ window.toggleAvatarFaceSelect = function() {
 window.executeAvatarChange = async function() {
     if (!window.currentUserId) return;
     
-    const selectedMode = document.querySelector('input[name="avatarMode"]:checked').value;
-    const selectedFace = document.querySelector('input[name="avatarFace"]:checked').value;
+    const selectedModeBtn = document.querySelector('input[name="avatarMode"]:checked');
+    const selectedFaceBtn = document.querySelector('input[name="avatarFace"]:checked');
+    
+    // 에러 방어: 버튼이 제대로 체크되지 않은 상태에서 저장 시도 시 방어
+    if (!selectedModeBtn || !selectedFaceBtn) {
+        window.showSystemAlert("아바타 형태와 얼굴을 정확히 선택해주세요.", true);
+        return;
+    }
+
+    const selectedMode = selectedModeBtn.value;
+    const selectedFace = selectedFaceBtn.value;
     
     const btn = document.querySelector("#avatarChangeModal .btn-login");
     const originalText = btn.textContent;
