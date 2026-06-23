@@ -43,13 +43,19 @@ window.executePwChange = async function() {
 
 // === 아바타 설정 모달 로직 ===
 window.openAvatarChangeModal = function() {
-    window.closeModal(); // 기존 프로필 메뉴 닫기
+    window.closeModal(); 
     
-    // 현재 세션의 아바타 모드값을 읽어서 라디오 버튼 체크 (기본값 photo)
+    // 현재 세션의 아바타 모드와 성별을 읽어서 라디오 버튼 세팅 (기본값 설정)
     const currentMode = window.currentUserData?.현재아바타모드 || 'photo';
-    const radioBtn = document.querySelector(`input[name="avatarMode"][value="${currentMode}"]`);
-    if(radioBtn) radioBtn.checked = true;
+    const currentGender = window.currentUserData?.아바타성별 || 'male';
     
+    const modeBtn = document.querySelector(`input[name="avatarMode"][value="${currentMode}"]`);
+    if(modeBtn) modeBtn.checked = true;
+    
+    const genderBtn = document.querySelector(`input[name="avatarGender"][value="${currentGender}"]`);
+    if(genderBtn) genderBtn.checked = true;
+    
+    window.toggleAvatarGenderSelect(); // 열릴 때 도트 메뉴 표시 여부 체크
     document.getElementById("avatarChangeModal").classList.add("active");
 };
 
@@ -57,11 +63,23 @@ window.closeAvatarChangeModal = function() {
     document.getElementById("avatarChangeModal").classList.remove("active");
 };
 
+// 도트 캐릭터 선택 시에만 성별 선택창을 보여주는 토글 함수
+window.toggleAvatarGenderSelect = function() {
+    const selectedMode = document.querySelector('input[name="avatarMode"]:checked').value;
+    const genderGroup = document.getElementById("avatarGenderGroup");
+    if (selectedMode === 'custom') {
+        genderGroup.style.display = "block";
+    } else {
+        genderGroup.style.display = "none";
+    }
+};
+
 window.executeAvatarChange = async function() {
     if (!window.currentUserId) return;
     
-    // 선택된 라디오 버튼의 값 가져오기
     const selectedMode = document.querySelector('input[name="avatarMode"]:checked').value;
+    const selectedGender = document.querySelector('input[name="avatarGender"]:checked').value;
+    
     const btn = document.querySelector("#avatarChangeModal .btn-login");
     const originalText = btn.textContent;
     btn.textContent = "저장 중...";
@@ -70,16 +88,20 @@ window.executeAvatarChange = async function() {
     try {
         const docRef = doc(db, "students", window.currentUserId);
         
-        // 1. 파이어베이스 데이터베이스 갱신
-        await updateDoc(docRef, { 현재아바타모드: selectedMode });
+        // 1. 파이어베이스 데이터베이스 갱신 (성별 필드 추가)
+        await updateDoc(docRef, { 
+            현재아바타모드: selectedMode,
+            아바타성별: selectedGender
+        });
         
         // 2. 현재 로컬 메모리(캐시) 동기화
         if (window.currentUserData) {
             window.currentUserData.현재아바타모드 = selectedMode;
+            window.currentUserData.아바타성별 = selectedGender;
         }
         
         // 3. UI 새로고침 없이 즉시 렌더링
-        window.renderAvatar(window.currentUserId, selectedMode);
+        window.renderAvatar(window.currentUserId, selectedMode, selectedGender);
         
         window.showSystemAlert("아바타 형태가 성공적으로 변경되었습니다.");
         window.closeAvatarChangeModal();
