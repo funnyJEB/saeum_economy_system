@@ -84,13 +84,49 @@ body {
 .card { background-color: var(--card-color); border-radius: 20px; padding: 22px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.02); }
 .profile-card { display: flex; gap: 16px; align-items: stretch; }
 
+/* 1. 아바타 존 160px 정사각형 고정 및 relative 추가 */
 .avatar-zone {
-    flex: 0 0 130px; background-color: #E5E8EB; border-radius: 18px; display: flex; flex-direction: column; justify-content: center;
-    align-items: center; color: #8B95A1; font-size: 14px; font-weight: 500; text-align: center; line-height: 1.5;
+    flex: 0 0 160px; 
+    height: 160px;
+    background-color: #E5E8EB; 
+    border-radius: 18px; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center;
+    align-items: center; 
+    color: #8B95A1; 
+    font-size: 14px; 
+    font-weight: 500; 
+    text-align: center; 
+    line-height: 1.5;
+    position: relative; /* 도트 아바타 절대 배치를 위해 추가 */
+    overflow: hidden; /* 이미지가 둥근 테두리를 벗어나지 않도록 방어 */
 }
 
-.info-zone { flex: 1; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
-
+/* 2. info-zone 세로 정렬 최적화 (아바타가 커진 만큼 중앙 정렬 강화) */
+.info-zone { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    gap: 10px; 
+    min-width: 0; /* 플렉스 박스 영역 이탈 방지 */
+}
+/* 3. [신규 추가] 아바타 전용 이미지 클래스 */
+.avatar-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 3:4 비율 사진을 1:1에 찌그러짐 없이 꽉 채움 */
+    object-position: center;
+}
+.avatar-custom-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* 800x800 원본 캔버스가 160px에 맞춰지도록 제어 */
+}
 .user-meta { display: flex; flex-direction: column; gap: 6px; }
 .name-wrapper { display: flex; align-items: baseline; gap: 4px; }
 .user-name { font-size: 26px; font-weight: 800; color: var(--primary); }
