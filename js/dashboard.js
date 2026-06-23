@@ -1,7 +1,7 @@
 import { doc, getDoc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "./firebase-config.js";
-// --- [추가할 코드] 실시간 아바타 렌더링 엔진 ---
-window.renderAvatar = function(studentId, mode, avatarGender) {
+// === 아바타 렌더링 엔진 ===
+window.renderAvatar = function(studentId, mode, avatarFace) {
     const zone = document.getElementById("userAvatarZone");
     if (!zone) return;
 
@@ -9,12 +9,12 @@ window.renderAvatar = function(studentId, mode, avatarGender) {
     const fallbackCustom = "https://via.placeholder.com/160?text=No+Avatar";
 
     if (mode === 'custom') {
-        // [수정] 데이터베이스 자동 판별 대신, 학생이 선택한 avatarGender 변수 사용
-        let bodyImage = (avatarGender === 'female') ? "base_female.png" : "base_male.png";
+        // 'typeB'를 선택했으면 base_female.png, 그 외(typeA)는 base_male.png 렌더링
+        let bodyImage = (avatarFace === 'typeB') ? "base_female.png" : "base_male.png";
         
-        zone.innerHTML = `<img src="./images/avatar/${bodyImage}" class="avatar-custom-layer" alt="도트 뼈대" onerror="this.src='${fallbackCustom}'">`;
+        zone.innerHTML = `<img src="./images/avatar/${bodyImage}" class="avatar-custom-layer" alt="캐릭터 얼굴" onerror="this.src='${fallbackCustom}'">`;
     } else {
-        // 기본값: photo 모드
+        // 사진 모드
         zone.innerHTML = `<img src="./images/students/${studentId}.jpg" class="avatar-photo" alt="학생 사진" onerror="this.src='${fallbackPhoto}'">`;
     }
 };
@@ -45,10 +45,10 @@ window.fetchStudentData = async function(inputId, inputPw) {
         document.getElementById("userCredit").textContent = data.신용등급 || "1";
         document.getElementById("userBalance").textContent = currentPoints.toLocaleString();
 
-        // [수정] 사용자 선택 필드(아바타성별) 연동
+        // [수정된 부분] DB에서 아바타얼굴 필드 불러오기
         const avatarMode = data.현재아바타모드 || 'photo';
-        const avatarGender = data.아바타성별 || 'male'; 
-        window.renderAvatar(inputId, avatarMode, avatarGender);
+        const avatarFace = data.아바타얼굴 || 'typeA'; 
+        window.renderAvatar(inputId, avatarMode, avatarFace);
         
         const workBtn = document.getElementById("btn-work-start");
         workBtn.style.display = "none"; workBtn.onclick = null; workBtn.style.backgroundColor = "var(--primary)";
