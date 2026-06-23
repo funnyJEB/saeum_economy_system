@@ -40,3 +40,54 @@ window.executePwChange = async function() {
         window.showSystemAlert("비밀번호가 성공적으로 변경되었습니다."); window.closePwChangeModal(); 
     } catch (e) { window.showSystemAlert("시스템 오류가 발생했습니다.", true); }
 };
+
+// === 아바타 설정 모달 로직 ===
+window.openAvatarChangeModal = function() {
+    window.closeModal(); // 기존 프로필 메뉴 닫기
+    
+    // 현재 세션의 아바타 모드값을 읽어서 라디오 버튼 체크 (기본값 photo)
+    const currentMode = window.currentUserData?.현재아바타모드 || 'photo';
+    const radioBtn = document.querySelector(`input[name="avatarMode"][value="${currentMode}"]`);
+    if(radioBtn) radioBtn.checked = true;
+    
+    document.getElementById("avatarChangeModal").classList.add("active");
+};
+
+window.closeAvatarChangeModal = function() {
+    document.getElementById("avatarChangeModal").classList.remove("active");
+};
+
+window.executeAvatarChange = async function() {
+    if (!window.currentUserId) return;
+    
+    // 선택된 라디오 버튼의 값 가져오기
+    const selectedMode = document.querySelector('input[name="avatarMode"]:checked').value;
+    const btn = document.querySelector("#avatarChangeModal .btn-login");
+    const originalText = btn.textContent;
+    btn.textContent = "저장 중...";
+    btn.disabled = true;
+    
+    try {
+        const docRef = doc(db, "students", window.currentUserId);
+        
+        // 1. 파이어베이스 데이터베이스 갱신
+        await updateDoc(docRef, { 현재아바타모드: selectedMode });
+        
+        // 2. 현재 로컬 메모리(캐시) 동기화
+        if (window.currentUserData) {
+            window.currentUserData.현재아바타모드 = selectedMode;
+        }
+        
+        // 3. UI 새로고침 없이 즉시 렌더링
+        window.renderAvatar(window.currentUserId, selectedMode);
+        
+        window.showSystemAlert("아바타 형태가 성공적으로 변경되었습니다.");
+        window.closeAvatarChangeModal();
+    } catch (e) {
+        console.error(e);
+        window.showSystemAlert("아바타 변경 중 시스템 오류가 발생했습니다.", true);
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+};
