@@ -70,7 +70,12 @@ window.closeJobSection = function(sectionId) {
 // 팝업 개별 제어 맵퍼 
 const modalContentMap = {
     president: { title: "👑 최고 관리자 업무", body: `<p style="color:var(--text-sub); margin-bottom:16px;">수행할 업무를 선택해주세요.</p><button class="modal-menu-btn" onclick="window.openJobSection('mart-section')">🛒 마트 결제 시스템 (POS)</button><button class="modal-menu-btn" onclick="window.openJobSection('bank-section')">🏦 은행 적금 관리 시스템</button><button class="modal-menu-btn" onclick="window.openJobSection('stock-section')">📈 주식 대행 거래 시스템</button>` },
-    profile: { title: "⚙️ 프로필 설정", body: `<button class="modal-menu-btn" onclick="window.showSystemAlert('아바타 기능은 준비 중입니다.', true)">🖼️ 내 아바타 변경하기</button><button class="modal-menu-btn" onclick="openPwChangeModal()">🔒 접속 비밀번호 변경하기</button>` },
+    // 수정 전의 profile: { ... } 부분을 아래 코드로 교체
+profile: { 
+    title: "⚙️ 프로필 설정", 
+    body: `<button class="modal-menu-btn" onclick="openAvatarChangeModal()">🖼️ 내 아바타 변경하기</button>
+           <button class="modal-menu-btn" onclick="openPwChangeModal()">🔒 접속 비밀번호 변경하기</button>` 
+},
     mall: { title: "🛍️ 새움mall", body: `<p style="text-align:center; color:var(--text-sub); padding:10px 0;">준비중입니다.</p>` },
     auction: { title: "⚖️ 실시간 학급 경매장", body: `<p style="text-align:center; color:var(--text-sub); padding:10px 0;">준비중입니다.</p>` }
 };
