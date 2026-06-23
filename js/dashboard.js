@@ -1,6 +1,27 @@
 import { doc, getDoc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { db } from "./firebase-config.js";
+// --- [추가할 코드] 실시간 아바타 렌더링 엔진 ---
+window.renderAvatar = function(studentId, mode) {
+    const zone = document.getElementById("userAvatarZone");
+    if (!zone) return;
 
+    // 에러 발생 시 엑스박스 방지용 디폴트 이미지
+    const fallbackPhoto = "https://via.placeholder.com/160?text=No+Photo";
+    const fallbackCustom = "https://via.placeholder.com/160?text=No+Avatar";
+
+    if (mode === 'custom') {
+        // 추후 의상을 겹칠 것을 대비해 layer 구조로 작성 (현재는 기본 몸통만)
+        zone.innerHTML = `
+            <img src="./images/avatar/base_body.png" class="avatar-custom-layer" alt="도트 몸통" onerror="this.src='${fallbackCustom}'">
+        `;
+    } else {
+        // 기본값: photo 모드
+        zone.innerHTML = `
+            <img src="./images/students/${studentId}.jpg" class="avatar-photo" alt="학생 사진" onerror="this.src='${fallbackPhoto}'">
+        `;
+    }
+};
+// -----------------------------------------------
 window.fetchStudentData = async function(inputId, inputPw) {
     try {
         const docRef = doc(db, "students", inputId);
@@ -27,6 +48,10 @@ window.fetchStudentData = async function(inputId, inputPw) {
         document.getElementById("userCredit").textContent = data.신용등급 || "1";
         document.getElementById("userBalance").textContent = currentPoints.toLocaleString();
 
+        // [이곳에 한 줄 추가] Firestore에서 현재아바타모드 읽어와서 그리기
+        const avatarMode = data.현재아바타모드 || 'photo';
+        window.renderAvatar(inputId, avatarMode);
+        
         const workBtn = document.getElementById("btn-work-start");
         workBtn.style.display = "none"; workBtn.onclick = null; workBtn.style.backgroundColor = "var(--primary)";
 
