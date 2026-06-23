@@ -45,17 +45,17 @@ window.executePwChange = async function() {
 window.openAvatarChangeModal = function() {
     window.closeModal(); 
     
-    // 현재 세션의 아바타 모드와 성별을 읽어서 라디오 버튼 세팅 (기본값 설정)
+    // 현재 세션의 아바타 모드와 얼굴 타입을 읽어서 라디오 버튼 세팅 (기본값 설정)
     const currentMode = window.currentUserData?.현재아바타모드 || 'photo';
-    const currentGender = window.currentUserData?.아바타성별 || 'male';
+    const currentFace = window.currentUserData?.아바타얼굴 || 'typeA';
     
     const modeBtn = document.querySelector(`input[name="avatarMode"][value="${currentMode}"]`);
     if(modeBtn) modeBtn.checked = true;
     
-    const genderBtn = document.querySelector(`input[name="avatarGender"][value="${currentGender}"]`);
-    if(genderBtn) genderBtn.checked = true;
+    const faceBtn = document.querySelector(`input[name="avatarFace"][value="${currentFace}"]`);
+    if(faceBtn) faceBtn.checked = true;
     
-    window.toggleAvatarGenderSelect(); // 열릴 때 도트 메뉴 표시 여부 체크
+    window.toggleAvatarFaceSelect(); // 열릴 때 캐릭터 메뉴 표시 여부 체크
     document.getElementById("avatarChangeModal").classList.add("active");
 };
 
@@ -63,14 +63,14 @@ window.closeAvatarChangeModal = function() {
     document.getElementById("avatarChangeModal").classList.remove("active");
 };
 
-// 도트 캐릭터 선택 시에만 성별 선택창을 보여주는 토글 함수
-window.toggleAvatarGenderSelect = function() {
+// 캐릭터 선택 시에만 얼굴 선택창을 보여주는 토글 함수
+window.toggleAvatarFaceSelect = function() {
     const selectedMode = document.querySelector('input[name="avatarMode"]:checked').value;
-    const genderGroup = document.getElementById("avatarGenderGroup");
+    const faceGroup = document.getElementById("avatarFaceGroup");
     if (selectedMode === 'custom') {
-        genderGroup.style.display = "block";
+        faceGroup.style.display = "block";
     } else {
-        genderGroup.style.display = "none";
+        faceGroup.style.display = "none";
     }
 };
 
@@ -78,7 +78,7 @@ window.executeAvatarChange = async function() {
     if (!window.currentUserId) return;
     
     const selectedMode = document.querySelector('input[name="avatarMode"]:checked').value;
-    const selectedGender = document.querySelector('input[name="avatarGender"]:checked').value;
+    const selectedFace = document.querySelector('input[name="avatarFace"]:checked').value;
     
     const btn = document.querySelector("#avatarChangeModal .btn-login");
     const originalText = btn.textContent;
@@ -88,22 +88,22 @@ window.executeAvatarChange = async function() {
     try {
         const docRef = doc(db, "students", window.currentUserId);
         
-        // 1. 파이어베이스 데이터베이스 갱신 (성별 필드 추가)
+        // 1. 파이어베이스 데이터베이스 갱신 ('아바타얼굴' 필드 사용)
         await updateDoc(docRef, { 
             현재아바타모드: selectedMode,
-            아바타성별: selectedGender
+            아바타얼굴: selectedFace
         });
         
         // 2. 현재 로컬 메모리(캐시) 동기화
         if (window.currentUserData) {
             window.currentUserData.현재아바타모드 = selectedMode;
-            window.currentUserData.아바타성별 = selectedGender;
+            window.currentUserData.아바타얼굴 = selectedFace;
         }
         
         // 3. UI 새로고침 없이 즉시 렌더링
-        window.renderAvatar(window.currentUserId, selectedMode, selectedGender);
+        window.renderAvatar(window.currentUserId, selectedMode, selectedFace);
         
-        window.showSystemAlert("아바타 형태가 성공적으로 변경되었습니다.");
+        window.showSystemAlert("아바타가 성공적으로 변경되었습니다.");
         window.closeAvatarChangeModal();
     } catch (e) {
         console.error(e);
