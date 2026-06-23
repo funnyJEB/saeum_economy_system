@@ -32,6 +32,11 @@
         <div class="avatar-zone">
             <span>아바타<br>영역</span>
         </div>
+
+        <div class="avatar-zone" id="userAvatarZone">
+            <span>로딩 중...</span>
+        </div>
+        
         <div class="info-zone">
             <div class="user-meta">
                 <div class="name-wrapper">
@@ -244,6 +249,34 @@
     </div>
 </div>
 
+<div id="avatarChangeModal" class="modal-overlay center-overlay" onclick="closeAvatarChangeModal()">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title">🖼️ 아바타 설정</div>
+            <button class="modal-close" onclick="closeAvatarChangeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="input-group" style="margin-bottom: 24px;">
+                <label>아바타 형태 선택</label>
+                <div style="display: flex; gap: 10px; margin-top: 8px;">
+                    <label style="flex:1; padding: 16px; border: 1px solid var(--sub-frame-border); border-radius: 12px; text-align: center; cursor: pointer; display: flex; flex-direction: column; gap: 8px; align-items: center; background: var(--sub-frame-bg);">
+                        <input type="radio" name="avatarMode" value="photo" style="width: 20px; height: 20px; margin: 0;">
+                        <span style="font-weight: 700; color: var(--text-main);">📷 실제 사진</span>
+                    </label>
+                    <label style="flex:1; padding: 16px; border: 1px solid var(--sub-frame-border); border-radius: 12px; text-align: center; cursor: pointer; display: flex; flex-direction: column; gap: 8px; align-items: center; background: var(--sub-frame-bg);">
+                        <input type="radio" name="avatarMode" value="custom" style="width: 20px; height: 20px; margin: 0;">
+                        <span style="font-weight: 700; color: var(--text-main);">👾 도트 캐릭터</span>
+                    </label>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-cancel" onclick="closeAvatarChangeModal()">취소</button>
+                <button class="btn-login" onclick="executeAvatarChange()" style="flex: 1; margin-top: 0;">변경하기</button>
+            </div>
+        </div>
+    </div>
+</div>
+    
 <div id="systemAlertModal" class="modal-overlay center-overlay" onclick="closeSystemAlert()">
     <div class="modal-dialog" onclick="event.stopPropagation()">
         <div class="modal-body" style="text-align: center; padding: 10px 10px 0;">
