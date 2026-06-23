@@ -55,7 +55,7 @@ window.fetchStudentData = async function(inputId, inputPw) {
 
         if (jobName === "대통령") {
             workBtn.style.display = "block"; workBtn.style.backgroundColor = "#F08200"; 
-            workBtn.innerText = "👑 최고 관리자 업무"; workBtn.onclick = () => window.openModal("president");
+            workBtn.innerText = "👑 마스터"; workBtn.onclick = () => window.openModal("president");
         } else if (jobName === "마트점장" || jobName === "마트운영자") {
             workBtn.style.display = "block"; workBtn.style.backgroundColor = "var(--mart-primary)";
             workBtn.onclick = () => window.openJobSection('mart-section');
